@@ -35,9 +35,6 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
  * @author Sam Schreiber
  */
 public class EndgameCaseGenerator {
-    private EndgameCaseGenerator() {
-    }
-
     public static void main(String[] args) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
         generateTestCase("connectFour", 0, 5, 6, new ProverStateMachine());
     }

@@ -1152,7 +1152,7 @@ public class JSONObject {
         String       hhhh;
         int          i;
         int          len = string.length();
-        StringBuilder sb = new StringBuilder(len + 4);
+        StringBuffer sb = new StringBuffer(len + 4);
 
         sb.append('"');
         for (i = 0; i < len; i += 1) {
@@ -1333,7 +1333,7 @@ public class JSONObject {
     public String toString() {
         try {
             Iterator<?>  keys = keys();
-            StringBuilder sb = new StringBuilder("{");
+            StringBuffer sb = new StringBuffer("{");
 
             while (keys.hasNext()) {
                 if (sb.length() > 1) {
@@ -1391,7 +1391,7 @@ public class JSONObject {
         Iterator<?>  keys = sortedKeys();
         int          newindent = indent + indentFactor;
         Object       object;
-        StringBuilder sb = new StringBuilder("{");
+        StringBuffer sb = new StringBuffer("{");
         if (length == 1) {
             object = keys.next();
             sb.append(quote(object.toString()));

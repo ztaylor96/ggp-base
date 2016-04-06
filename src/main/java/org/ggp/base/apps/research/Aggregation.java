@@ -15,7 +15,7 @@ import java.util.TreeSet;
  */
 public abstract class Aggregation<T extends Comparable<T>>
 {
-    private final Map<String, T> entryData = new HashMap<String, T>();
+    final private Map<String, T> entryData = new HashMap<String, T>();
 
     boolean containsEntry(String key) {
         return entryData.containsKey(key);

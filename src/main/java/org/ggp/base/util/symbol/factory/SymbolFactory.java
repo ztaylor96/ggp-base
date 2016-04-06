@@ -13,9 +13,6 @@ import org.ggp.base.util.symbol.grammar.SymbolPool;
 
 public final class SymbolFactory
 {
-    private SymbolFactory() {
-    }
-
     public static Symbol create(String string) throws SymbolFormatException
     {
         try

@@ -56,10 +56,10 @@ public class TTCC4Canvas extends GameCanvas_FancyGrid {
         theMoves.addAll(gameStateHasLegalMovesMatching("\\( checkerMove " + xCell + " " + yCell + " (.*) \\)"));
         theMoves.addAll(gameStateHasLegalMovesMatching("\\( jump " + xCell + " " + yCell + " (.*) \\)"));
 
-        if(theMoves.isEmpty())
+        if(theMoves.size() == 0)
             theMoves.addAll(gameStateHasLegalMovesMatching("\\( drop " + xCell + " \\)"));
 
-        if(theMoves.isEmpty())
+        if(theMoves.size() == 0)
             theMoves.add("noop");
 
         return theMoves;
@@ -73,7 +73,7 @@ public class TTCC4Canvas extends GameCanvas_FancyGrid {
 
     @Override
     protected void renderCellContent(Graphics g, Set<String> theFacts) {
-        if(theFacts.isEmpty()) return;
+        if(theFacts.size() == 0) return;
         String theFact = theFacts.iterator().next();
 
         String[] cellFacts = theFact.split(" ");

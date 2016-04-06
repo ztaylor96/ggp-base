@@ -22,9 +22,6 @@ import org.ggp.base.util.prover.aima.substitution.Substitution;
 public final class Substituter
 {
 
-    private Substituter() {
-    }
-
     public static GdlLiteral substitute(GdlLiteral literal, Substitution theta)
     {
         return substituteLiteral(literal, theta);

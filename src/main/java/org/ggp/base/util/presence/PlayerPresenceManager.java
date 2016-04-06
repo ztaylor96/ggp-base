@@ -68,7 +68,7 @@ public class PlayerPresenceManager implements Subject {
     public PlayerPresenceManager() {
         monitoredPlayers = new HashMap<String,PlayerPresence>();
         loadPlayersJSON();
-        if (monitoredPlayers.isEmpty()) {
+        if (monitoredPlayers.size() == 0) {
             try {
                 // When starting from a blank slate, add some initial players to the
                 // monitoring list just so that it's clear how it works.

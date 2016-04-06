@@ -35,7 +35,8 @@ public final class SampleMonteCarloGamer extends SampleGamer
         long start = System.currentTimeMillis();
         long finishBy = timeout - 1000;
 
-        List<Move> moves = theMachine.getLegalMoves(getCurrentState(), getRole());
+        List<Move> moves = theMachine.findLegals(getRole(), getCurrentState());
+
         Move selection = moves.get(0);
         if (moves.size() > 1) {
             int[] moveTotalPoints = new int[moves.size()];
@@ -81,7 +82,7 @@ public final class SampleMonteCarloGamer extends SampleGamer
         StateMachine theMachine = getStateMachine();
         try {
             MachineState finalState = theMachine.performDepthCharge(theMachine.getRandomNextState(theState, getRole(), myMove), depth);
-            return theMachine.getGoal(finalState, getRole());
+            return theMachine.findReward(getRole(), finalState);
         } catch (Exception e) {
             e.printStackTrace();
             return 0;

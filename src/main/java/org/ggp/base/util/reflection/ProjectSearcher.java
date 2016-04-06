@@ -12,9 +12,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class ProjectSearcher {
-    private ProjectSearcher() {
-    }
-
     public static void main(String[] args)
     {
         System.out.println(GAMERS);

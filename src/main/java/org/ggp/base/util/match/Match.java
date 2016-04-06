@@ -289,10 +289,10 @@ public final class Match
             theJSON.put("states", new JSONArray(renderArrayAsJSON(renderStateHistory(stateHistory), true)));
             theJSON.put("moves", new JSONArray(renderArrayAsJSON(renderMoveHistory(moveHistory), false)));
             theJSON.put("stateTimes", new JSONArray(renderArrayAsJSON(stateTimeHistory, false)));
-            if (!errorHistory.isEmpty()) {
+            if (errorHistory.size() > 0) {
                 theJSON.put("errors", new JSONArray(renderArrayAsJSON(renderErrorHistory(errorHistory), false)));
             }
-            if (!goalValues.isEmpty()) {
+            if (goalValues.size() > 0) {
                 theJSON.put("goalValues", goalValues);
             }
             theJSON.put("previewClock", previewClock);
@@ -362,13 +362,13 @@ public final class Match
     }
 
     public List<GdlTerm> getMostRecentMoves() {
-        if (moveHistory.isEmpty())
+        if (moveHistory.size() == 0)
             return null;
         return moveHistory.get(moveHistory.size()-1);
     }
 
     public Set<GdlSentence> getMostRecentState() {
-        if (stateHistory.isEmpty())
+        if (stateHistory.size() == 0)
             return null;
         return stateHistory.get(stateHistory.size()-1);
     }

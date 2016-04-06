@@ -6,11 +6,8 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 
 
 public class SentenceModelUtils {
-    private SentenceModelUtils() {
-    }
-
     public static boolean inSentenceFormGroup(GdlSentence sentence,
-                                              Set<SentenceForm> forms) {
+            Set<SentenceForm> forms) {
         for(SentenceForm form : forms)
             if(form.matches(sentence))
                 return true;

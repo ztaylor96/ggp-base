@@ -19,9 +19,6 @@ import external.JSON.JSONObject;
  * @author Sam
  */
 public class RemoteResourceLoader {
-    private RemoteResourceLoader() {
-    }
-
     public static JSONObject loadJSON(String theURL) throws JSONException, IOException {
         return loadJSON(theURL, 1);
     }

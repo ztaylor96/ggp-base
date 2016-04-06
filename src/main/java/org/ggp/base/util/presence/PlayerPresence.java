@@ -6,8 +6,8 @@ import org.ggp.base.server.request.RequestBuilder;
 import org.ggp.base.util.http.HttpRequest;
 
 public class PlayerPresence {
-    private final String host;
-    private final int port;
+    final private String host;
+    final private int port;
     private String name;
     private String status;
     private long statusTime;

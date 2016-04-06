@@ -122,9 +122,9 @@ public class GameStateRenderer {
     //========IOstring code========
     private static class IOString
     {
-        private StringBuilder buf;
+        private StringBuffer buf;
         public IOString(String s) {
-            buf = new StringBuilder(s);
+            buf = new StringBuffer(s);
         }
         public String getString() {
             return buf.toString();

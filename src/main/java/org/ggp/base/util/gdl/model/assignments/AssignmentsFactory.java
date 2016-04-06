@@ -20,12 +20,9 @@ import org.ggp.base.util.gdl.model.SentenceForm;
 
 public class AssignmentsFactory {
 
-    private AssignmentsFactory() {
-    }
-
     public static Assignments getAssignmentsForRule(GdlRule rule,
-                                                    SentenceDomainModel model, Map<SentenceForm, FunctionInfo> functionInfoMap,
-                                                    Map<SentenceForm, ? extends Collection<GdlSentence>> completedSentenceFormValues) {
+            SentenceDomainModel model, Map<SentenceForm, FunctionInfo> functionInfoMap,
+            Map<SentenceForm, ? extends Collection<GdlSentence>> completedSentenceFormValues) {
         return new AssignmentsImpl(rule,
                 SentenceDomainModels.getVarDomains(rule, model, VarDomainOpts.INCLUDE_HEAD),
                 functionInfoMap,
@@ -73,7 +70,7 @@ public class AssignmentsFactory {
             }
         }
 
-        if(assignmentsList.isEmpty())
+        if(assignmentsList.size() == 0)
             return new AssignmentsImpl();
         if(assignmentsList.size() == 1)
             return assignmentsList.get(0);

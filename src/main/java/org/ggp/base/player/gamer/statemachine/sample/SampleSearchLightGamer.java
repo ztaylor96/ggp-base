@@ -72,7 +72,7 @@ public final class SampleSearchLightGamer extends StateMachineGamer
         long start = System.currentTimeMillis();
         long finishBy = timeout - 1000;
 
-        List<Move> moves = theMachine.getLegalMoves(getCurrentState(), getRole());
+        List<Move> moves = theMachine.findLegals(getRole(), getCurrentState());
         Move selection = (moves.get(theRandom.nextInt(moves.size())));
 
         // Shuffle the moves into a random order, so that when we find the first
@@ -107,23 +107,23 @@ public final class SampleSearchLightGamer extends StateMachineGamer
             // opponent's no-op. In a simultaneous-action game, however, the opponent
             // may have many moves, and so we will randomly pick one of our opponent's
             // possible actions and assume they do that.
-            MachineState nextState = theMachine.getNextState(getCurrentState(), theMachine.getRandomJointMove(getCurrentState(), getRole(), moveUnderConsideration));
+            MachineState nextState = theMachine.findNext(theMachine.getRandomJointMove(getCurrentState(), getRole(), moveUnderConsideration), getCurrentState());
 
             // Does the move under consideration end the game? If it does, do we win
             // or lose? If we lose, don't bother considering it. If we win, then we
             // definitely want to take this move. If its goal is better than our current
             // best goal, go ahead and tentatively select it
-            if(theMachine.isTerminal(nextState)) {
-                if(theMachine.getGoal(nextState, getRole()) == 0) {
+            if(theMachine.findTerminalp(nextState)) {
+                if(theMachine.findReward(getRole(), nextState) == 0) {
                     continue;
-                } else if(theMachine.getGoal(nextState, getRole()) == 100) {
+                } else if(theMachine.findReward(getRole(), nextState) == 100) {
                     selection = moveUnderConsideration;
                     break;
                 } else {
-                    if (theMachine.getGoal(nextState, getRole()) > maxGoal)
+                    if (theMachine.findReward(getRole(), nextState) > maxGoal)
                     {
                         selection = moveUnderConsideration;
-                        maxGoal = theMachine.getGoal(nextState, getRole());
+                        maxGoal = theMachine.findReward(getRole(), nextState);
                     }
                     continue;
                 }
@@ -136,9 +136,9 @@ public final class SampleSearchLightGamer extends StateMachineGamer
             // they will take it.
             boolean forcedLoss = false;
             for(List<Move> jointMove : theMachine.getLegalJointMoves(nextState)) {
-                MachineState nextNextState = theMachine.getNextState(nextState, jointMove);
-                if(theMachine.isTerminal(nextNextState)) {
-                    if(theMachine.getGoal(nextNextState, getRole()) == 0) {
+                MachineState nextNextState = theMachine.findNext(jointMove, nextState);
+                if(theMachine.findTerminalp(nextNextState)) {
+                    if(theMachine.findReward(getRole(), nextNextState) == 0) {
                         forcedLoss = true;
                         break;
                     }

@@ -81,7 +81,7 @@ public final class LocalGameRepository extends GameRepository {
             if (response == null) {
                 t.sendResponseHeaders(404, 0);
                 OutputStream os = t.getResponseBody();
-                os.close();
+                 os.close();
             } else {
                 t.sendResponseHeaders(200, response.length);
                 OutputStream os = t.getResponseBody();
@@ -93,9 +93,6 @@ public final class LocalGameRepository extends GameRepository {
 
     static class BaseRepository {
         public static final String repositoryRootDirectory = theLocalRepoURL;
-
-        private BaseRepository() {
-        }
 
         public static boolean shouldIgnoreFile(String fileName) {
             if (fileName.startsWith(".")) return true;
@@ -312,9 +309,6 @@ public final class LocalGameRepository extends GameRepository {
     }
 
     static class MetadataCompleter {
-        private MetadataCompleter() {
-        }
-
         /**
          * Complete fields in the metadata procedurally, based on the game rulesheet.
          * This is used to fill in the number of roles, and create a list containing

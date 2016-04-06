@@ -49,7 +49,7 @@ public class TTCCanvas extends GameCanvas_FancyGrid {
     protected Set<String> getLegalMovesForCell(int xCell, int yCell) {
         Set<String> theMoves = gameStateHasLegalMovesMatching("\\( move " + xCell + " " + yCell + " (.*) \\)");
 
-        if(theMoves.isEmpty())
+        if(theMoves.size() == 0)
             theMoves.add("noop");
 
         return theMoves;
@@ -64,7 +64,7 @@ public class TTCCanvas extends GameCanvas_FancyGrid {
 
     @Override
     protected void renderCellContent(Graphics g, Set<String> theFacts) {
-        if(theFacts.isEmpty()) return;
+        if(theFacts.size() == 0) return;
         String theFact = theFacts.iterator().next();
 
         String[] cellFacts = theFact.split(" ");

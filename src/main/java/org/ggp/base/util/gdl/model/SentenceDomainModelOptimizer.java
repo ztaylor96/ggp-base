@@ -35,9 +35,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 public class SentenceDomainModelOptimizer {
-    private SentenceDomainModelOptimizer() {
-    }
-
     /**
      * Given a SentenceDomainModel, returns an ImmutableSentenceDomainModel
      * with Cartesian domains that tries to minimize the domains of sentence

@@ -24,9 +24,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 public class SentenceFormModelFactory {
-    private SentenceFormModelFactory() {
-    }
-
     /**
      * Creates a SentenceFormModel for the given game description.
      *

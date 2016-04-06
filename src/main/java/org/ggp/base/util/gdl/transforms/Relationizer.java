@@ -23,9 +23,6 @@ import org.ggp.base.util.gdl.model.SentenceFormModelFactory;
 
 public class Relationizer {
 
-    private Relationizer() {
-    }
-
     /**
      * Searches the description for statements that are needlessly treated as
      * base propositions when they could be expressed as simple relations, and

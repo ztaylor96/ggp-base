@@ -19,17 +19,15 @@ import org.ggp.base.util.statemachine.Role;
 public final class ProverQueryBuilder
 {
 
-    private static final GdlConstant DOES = GdlPool.getConstant("does");
-    private static final GdlConstant GOAL = GdlPool.getConstant("goal");
-    private static final GdlRelation INIT_QUERY = GdlPool.getRelation(GdlPool.getConstant("init"), new GdlTerm[] { GdlPool.getVariable("?x") });
-    private static final GdlConstant LEGAL = GdlPool.getConstant("legal");
-    private static final GdlRelation NEXT_QUERY = GdlPool.getRelation(GdlPool.getConstant("next"), new GdlTerm[] { GdlPool.getVariable("?x") });
-    private static final GdlRelation ROLE_QUERY = GdlPool.getRelation(GdlPool.getConstant("role"), new GdlTerm[] { GdlPool.getVariable("?x") });
-    private static final GdlProposition TERMINAL_QUERY = GdlPool.getProposition(GdlPool.getConstant("terminal"));
-    private static final GdlVariable VARIABLE = GdlPool.getVariable("?x");
-
-    private ProverQueryBuilder() {
-    }
+    private final static GdlConstant DOES = GdlPool.getConstant("does");
+    private final static GdlConstant GOAL = GdlPool.getConstant("goal");
+    private final static GdlRelation INIT_QUERY = GdlPool.getRelation(GdlPool.getConstant("init"), new GdlTerm[] { GdlPool.getVariable("?x") });
+    private final static GdlConstant INPUT = GdlPool.getConstant("input");
+    private final static GdlConstant LEGAL = GdlPool.getConstant("legal");
+    private final static GdlRelation NEXT_QUERY = GdlPool.getRelation(GdlPool.getConstant("next"), new GdlTerm[] { GdlPool.getVariable("?x") });
+    private final static GdlRelation ROLE_QUERY = GdlPool.getRelation(GdlPool.getConstant("role"), new GdlTerm[] { GdlPool.getVariable("?x") });
+    private final static GdlProposition TERMINAL_QUERY = GdlPool.getProposition(GdlPool.getConstant("terminal"));
+    private final static GdlVariable VARIABLE = GdlPool.getVariable("?x");
 
     public static Set<GdlSentence> getContext(MachineState state)
     {
@@ -54,6 +52,11 @@ public final class ProverQueryBuilder
     public static GdlRelation getInitQuery()
     {
         return INIT_QUERY;
+    }
+
+    public static GdlRelation getInputQuery(Role role)
+    {
+        return GdlPool.getRelation(INPUT, new GdlTerm[] { role.getName(), VARIABLE });
     }
 
     public static GdlRelation getLegalQuery(Role role)

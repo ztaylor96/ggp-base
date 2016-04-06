@@ -346,7 +346,7 @@ public class JSONArray {
      */
     public String join(String separator) throws JSONException {
         int len = length();
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
         for (int i = 0; i < len; i += 1) {
             if (i > 0) {
@@ -850,7 +850,7 @@ public class JSONArray {
             return "[]";
         }
         int i;
-        StringBuilder sb = new StringBuilder("[");
+        StringBuffer sb = new StringBuffer("[");
         if (len == 1) {
             sb.append(JSONObject.valueToString(this.myArrayList.get(0),
                     indentFactor, indent));

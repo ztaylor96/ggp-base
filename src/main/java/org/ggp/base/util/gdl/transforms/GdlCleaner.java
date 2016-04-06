@@ -21,11 +21,8 @@ import org.ggp.base.util.gdl.grammar.GdlVariable;
 
 //Cleans up various issues with games to make them more standardized.
 public class GdlCleaner {
-    private static final int MAX_ITERATIONS = 100;
-    private static final GdlConstant BASE = GdlPool.getConstant("base");
-
-    private GdlCleaner() {
-    }
+    private final static int MAX_ITERATIONS = 100;
+    private final static GdlConstant BASE = GdlPool.getConstant("base");
 
     public static List<Gdl> run(List<Gdl> description) {
         for (int i = 0; i < MAX_ITERATIONS; i++) {
@@ -216,7 +213,7 @@ public class GdlCleaner {
         List<GdlTerm> cleanedBody = new ArrayList<GdlTerm>();
         for(GdlTerm term : sentence.getBody())
             cleanedBody.add(cleanParentheses(term));
-        if (cleanedBody.isEmpty()) {
+        if (cleanedBody.size() == 0) {
             return GdlPool.getProposition(sentence.getName());
         } else {
             return GdlPool.getRelation(sentence.getName(), cleanedBody);
