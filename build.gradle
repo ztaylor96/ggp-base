@@ -1,12 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'checkstyle'
-apply plugin: 'idea'
-apply plugin: 'scala'
 
 // We compile using Java 7.
 sourceCompatibility = 1.7
-targetCompatibility = 1.7
 
 /*
  * For now, instead of using an online library repository (e.g. Maven), we keep
@@ -14,7 +10,6 @@ targetCompatibility = 1.7
  * during setup.
  */
 dependencies {
-    compile 'org.scala-lang:scala-library:2.11.7'
     compile files(
         'lib/Guava/guava-14.0.1.jar',
         'lib/Jython/jython.jar',
@@ -30,21 +25,6 @@ dependencies {
         'lib/JUnit/hamcrest-core-1.3.jar',
     )
 }
-
-//Checkstyle does need a repository to be defined to work. This is only
-//required to check that the code works from the command line, not to run
-//applications from the command line.
-repositories {
-    mavenCentral()
-}
-
-/*
- * Source jars can be specified here so the sources for these libraries will
- * appear in Eclipse.
- */
-def sourceJars = [
-    'lib/Guava/guava-14.0.1.jar' : 'lib/Guava/guava-14.0.1-sources.jar'
-];
 
 /*
  * Unfortunately, the local-jar approach causes problems when generating a
@@ -68,13 +48,6 @@ eclipse {
                             def startIndex = absolutePath.indexOf('/lib/') + 1
                             def relativePath = absolutePath.substring(startIndex)
                             classpathEntry.attributes().put('path', relativePath)
-                        }
-
-			//Add source jars to .classpath
-                        def path = classpathEntry.attribute('path')
-                        if (sourceJars.containsKey(path)) {
-                            def sourceJarPath = sourceJars.get(path)
-                            classpathEntry.attributes().put('sourcepath', sourceJarPath)
                         }
                     }
                 }
@@ -119,9 +92,7 @@ task clojureGamer(type: JavaExec) {
 }
 */
 
-//You can tweak these JVM arguments for players run through Gradle.
-def playerJvmArgs = [
-        '-Xmx1500m', //Gives players a max heap size of 1500 MB
+def playerJvmArgs = ['-mx1500m',
         '-server',
         '-XX:-DontCompileHugeMethods',
         '-XX:MinHeapFreeRatio=10',
@@ -182,5 +153,5 @@ task gameServerRunner(type: JavaExec) {
 
 // This was used to generate the Gradle wrapper.
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.12'
+    gradleVersion = '2.1'
 }

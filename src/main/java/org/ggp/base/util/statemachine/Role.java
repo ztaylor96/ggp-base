@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.ggp.base.util.gdl.grammar.Gdl;
 import org.ggp.base.util.gdl.grammar.GdlConstant;
-import org.ggp.base.util.gdl.grammar.GdlPool;
 import org.ggp.base.util.gdl.grammar.GdlRelation;
 
 
@@ -24,10 +23,6 @@ public class Role implements Serializable
     public Role(GdlConstant name)
     {
         this.name = name;
-    }
-
-    public static Role create(String name) {
-        return new Role(GdlPool.getConstant(name));
     }
 
     @Override

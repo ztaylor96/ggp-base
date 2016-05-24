@@ -63,11 +63,11 @@ import org.ggp.base.util.statemachine.MachineState;
  * One common situation involves each cell having exactly one fact associated
  * with it, often of the form "(cell 1 1 x)". In this situation, it's more convenient
  * to have that single fact extracted and passed to renderCellContent() as a String,
- * rather than as a {@code Set<String>} containing one element. If you want that automatic
+ * rather than as a Set<String> containing one element. If you want that automatic
  * extraction done, override the renderCellContent() method that takes a String as its
  * second parameter. Otherwise, if your getFactsAboutCell() method is expected to return
  * multiple facts about the same cell, override the renderCellContent() method that takes
- * a {@code Set<String>} as its second parameter.
+ * a Set<String> as its second parameter.
  *
  * Another common situation involves having a game where you want to automatically
  * display the grid, drawing black boxes around grid cells and always highlighting
@@ -110,7 +110,7 @@ public abstract class GameCanvas_FancyGrid extends GameCanvas_SimpleGrid {
     private String currentSelectedMove;
     private Iterator<String> possibleSelectedMoves = null;
     @Override
-    protected final void handleClickOnCell(int xCell, int yCell, int xWithin, int yWithin) {
+	protected final void handleClickOnCell(int xCell, int yCell, int xWithin, int yWithin) {
         if(selectedRow != yCell || selectedColumn != xCell || !possibleSelectedMoves.hasNext()) {
             SortedSet<String> theMoves = new TreeSet<String>(getLegalMovesForCell(xCell, yCell));
             if(theMoves.size() == 0)
@@ -141,13 +141,13 @@ public abstract class GameCanvas_FancyGrid extends GameCanvas_SimpleGrid {
 
     // When the game state changes, clear our cache of known facts.
     @Override
-    public void updateGameState(MachineState gameState) {
+	public void updateGameState(MachineState gameState) {
         factsCache.clear();
         super.updateGameState(gameState);
     }
 
     @Override
-    protected final void renderCell(Graphics g, int xCell, int yCell) {
+	protected final void renderCell(Graphics g, int xCell, int yCell) {
         renderCellBackground(g, xCell, yCell);
         renderCellContent(g, getCachedFactsAboutCell(xCell, yCell));
         if(useGridVisualization()) CommonGraphics.drawCellBorder(g);
@@ -160,7 +160,7 @@ public abstract class GameCanvas_FancyGrid extends GameCanvas_SimpleGrid {
     }
 
     @Override
-    public final void clearMoveSelection() {
+	public final void clearMoveSelection() {
         submitWorkingMove(null);
 
         possibleSelectedMoves = null;

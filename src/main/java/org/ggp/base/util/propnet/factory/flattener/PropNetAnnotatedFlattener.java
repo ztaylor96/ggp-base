@@ -29,20 +29,18 @@ import org.ggp.base.util.prover.aima.unifier.Unifier;
  * the rules to contain ( base ?x ) propositions that explicitly specify domains
  * for all of the base propositions.
  *
- * <p>This flattener should work on all sizes of games, but requires these explicit
+ * This flattener should work on all sizes of games, but requires these explicit
  * annotations to be present in the game description; it cannot infer them.
  *
- * <p>A separate PropNetAnnotater class is able to generate these annotations.
+ * A separate PropNetAnnotater class is able to generate these annotations.
  * Sadly, it can only annotate relatively simple games. If there are no base
  * propositions in a game description, PropNetAnnotatedFlattener will call
  * the annotater in an attempt to generate annotations.
  *
- * <p>To use this class:
- * <pre>
- * {@code     PropNetAnnotatedFlattener AF = new PropNetAnnotatedFlattener(description); }
- * {@code     List<GdlRule> flatDescription = AF.flatten();                              }
- * {@code     return converter.convert(flatDescription);                                 }
- * </pre>
+ * To use this class:
+ *      PropNetAnnotatedFlattener AF = new PropNetAnnotatedFlattener(description);
+ *      List<GdlRule> flatDescription = AF.flatten();
+ *      return converter.convert(flatDescription);
  */
 public final class PropNetAnnotatedFlattener
 {
@@ -53,8 +51,6 @@ public final class PropNetAnnotatedFlattener
 
     /**
      * Construct a BasicPropNetFlattener for a given game.
-     *
-     * @param description A game description.
      */
     private List<Gdl> description;
     public PropNetAnnotatedFlattener(List<Gdl> description) {
@@ -71,8 +67,9 @@ public final class PropNetAnnotatedFlattener
      * records the result.</li>
      * </ol>
      *
-     * @return An equivalent description to the one passed into the constructor,
-     * without variables.
+     * @param description
+     *            A game description.
+     * @return An equivalent description, without variables.
      */
     public List<GdlRule> flatten()
     {
