@@ -49,9 +49,13 @@ public final class Player extends JPanel
 
 	public static void main(String[] args) throws IOException
 	{
-	    NativeUI.setNativeUI();
+	    initialize(null);
+	}
 
-	    final Player playerPanel = new Player();
+	public static void initialize(String name) {
+		NativeUI.setNativeUI();
+
+	    final Player playerPanel = new Player(name);
 	    javax.swing.SwingUtilities.invokeLater(new Runnable()
 	    {
 
@@ -63,12 +67,12 @@ public final class Player extends JPanel
 	    });
 	}
 
-	private final JButton createButton;
-	private final JTabbedPane playersTabbedPane;
+	private JButton createButton;
+	private JTabbedPane playersTabbedPane;
 
-	private final JTextField portTextField;
+	private JTextField portTextField;
 
-	private final JComboBox<String> typeComboBox;
+	private JComboBox<String> typeComboBox;
 
 	private Integer defaultPort = 9147;
 
@@ -77,6 +81,15 @@ public final class Player extends JPanel
 	public Player()
 	{
 		super(new GridBagLayout());
+		constructor(null);
+	}
+
+	public Player(String name) {
+		super(new GridBagLayout());
+		constructor(name);
+	}
+
+	private void constructor(String name) {
 
 		portTextField = new JTextField(defaultPort.toString());
 		typeComboBox = new JComboBox<String>();
@@ -105,6 +118,10 @@ public final class Player extends JPanel
 			}
 		}
 
+		if (name != null) {
+			typeComboBox.setSelectedItem(name);
+		}
+
 		JPanel managerPanel = new JPanel(new GridBagLayout());
 		managerPanel.setBorder(new TitledBorder("Manager"));
 
@@ -121,7 +138,6 @@ public final class Player extends JPanel
 
 		this.add(managerPanel, new GridBagConstraints(0, 0, 1, 1, 0.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 5, 5));
 		this.add(playersPanel, new GridBagConstraints(1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 5, 5));
-
 	}
 
 	private AbstractAction createButtonMethod()
