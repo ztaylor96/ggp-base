@@ -74,12 +74,27 @@ public final class GdlFunction extends GdlTerm
 	{
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("( " + name + " ");
-		for (GdlTerm term : body)
-		{
-			sb.append(term + " ");
+		switch (GdlPool.format) {
+			case HRF:
+				sb.append(name + "(");
+				for (int i=0; i<body.size(); i++) {
+					sb.append(body.get(i));
+					if (i < body.size()-1) {
+						sb.append(", ");
+					}
+				}
+				sb.append(")");
+				break;
+
+			case KIF:
+				sb.append("( " + name + " ");
+				for (GdlTerm term : body)
+				{
+					sb.append(term + " ");
+				}
+				sb.append(")");
+				break;
 		}
-		sb.append(")");
 
 		return sb.toString();
 	}

@@ -18,10 +18,9 @@ import org.ggp.base.util.http.HttpWriter;
 import org.ggp.base.util.logging.GamerLogger;
 import org.ggp.base.util.observer.Event;
 import org.ggp.base.util.observer.Observer;
-import org.ggp.base.util.observer.Subject;
 
 
-public final class GamePlayer extends Thread implements Subject
+public final class GamePlayer extends AbstractGamePlayer
 {
     private final int port;
     private final Gamer gamer;

@@ -19,23 +19,55 @@ import org.ggp.base.player.request.grammar.StopRequest;
 import org.ggp.base.util.game.Game;
 import org.ggp.base.util.gdl.factory.GdlFactory;
 import org.ggp.base.util.gdl.factory.exceptions.GdlFormatException;
+import org.ggp.base.util.gdl.grammar.DataFormat;
 import org.ggp.base.util.gdl.grammar.GdlConstant;
+import org.ggp.base.util.gdl.grammar.GdlPool;
 import org.ggp.base.util.gdl.grammar.GdlTerm;
+import org.ggp.base.util.symbol.factory.HRFSymbolFactory;
 import org.ggp.base.util.symbol.factory.SymbolFactory;
+import org.ggp.base.util.symbol.factory.exceptions.SymbolFormatException;
 import org.ggp.base.util.symbol.grammar.Symbol;
 import org.ggp.base.util.symbol.grammar.SymbolAtom;
 import org.ggp.base.util.symbol.grammar.SymbolList;
 
 public final class RequestFactory
 {
+	private SymbolList parseSource(String source) throws RequestFormatException {
+		try {
+			SymbolList list = null;
+	        switch (GdlPool.format) {
+		        case HRF:
+		        	Symbol sym = HRFSymbolFactory.create(source);
+					if (sym.toString().length() == 1 && sym.toString().charAt(0) == 26) {
+						return null;
+					}
+					SymbolList message = (SymbolList) sym;
+					list = (SymbolList) message.get(message.size()-1);
+		        	break;
+		        case KIF:
+		        	list = (SymbolList) SymbolFactory.create(source);
+		        	break;
+		        default:
+		        	throw new SymbolFormatException("Data Format is not defined.");
+		    }
+
+			return list;
+		} catch (SymbolFormatException e) {
+			throw new RequestFormatException(source, e);
+		}
+	}
 	public Request create(Gamer gamer, String source) throws RequestFormatException
 	{
 		try
 		{
-			SymbolList list = (SymbolList) SymbolFactory.create(source);
-			SymbolAtom head = (SymbolAtom) list.get(0);
+			SymbolList list = parseSource(source);
+			if (list == null) {
+				return null;
+			}
+			SymbolAtom request = (SymbolAtom) list.get(0);
 
-			String type = head.getValue().toLowerCase();
+
+			String type = request.getValue().toLowerCase();
 			if (type.equals("play"))
 			{
 				return createPlay(gamer, list);
@@ -88,6 +120,11 @@ public final class RequestFactory
 		String matchId = arg1.getValue();
 		List<GdlTerm> moves = parseMoves(arg2);
 
+		//remove head from HRF messages
+		if (moves != null && GdlPool.format == DataFormat.HRF) {
+			moves.remove(0);
+		}
+
 		return new PlayRequest(gamer, matchId, moves);
 	}
 
@@ -116,7 +153,7 @@ public final class RequestFactory
 
 		SymbolAtom arg1 = (SymbolAtom) list.get(1);
 		SymbolAtom arg2 = (SymbolAtom) list.get(2);
-		SymbolList arg3 = (SymbolList) list.get(3);
+		Symbol arg3 = list.get(3);
 		SymbolAtom arg4 = (SymbolAtom) list.get(4);
 		SymbolAtom arg5 = (SymbolAtom) list.get(5);
 

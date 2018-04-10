@@ -2,6 +2,9 @@ package org.ggp.base.util.symbol.grammar;
 
 import java.util.List;
 
+import org.ggp.base.util.gdl.grammar.GdlPool;
+import org.ggp.base.util.symbol.factory.HRFSymbolFactory;
+
 public final class SymbolList extends Symbol
 {
 
@@ -23,18 +26,27 @@ public final class SymbolList extends Symbol
 	}
 
 	@Override
-	public String toString()
-	{
-		StringBuilder sb = new StringBuilder();
+	public String toString() {
+		switch (GdlPool.format) {
 
-		sb.append("( ");
-		for (Symbol symbol : contents)
-		{
-			sb.append(symbol.toString() + " ");
+			case HRF:
+				return HRFSymbolFactory.Grinder.grind(this);
+			case KIF:
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("( ");
+				for (Symbol symbol : contents)
+				{
+					sb.append(symbol.toString() + " ");
+				}
+				sb.append(")");
+
+				return sb.toString();
+
+			default:
+				return ((Object) this).toString();
+
 		}
-		sb.append(")");
-
-		return sb.toString();
 	}
 
 }

@@ -3,6 +3,8 @@ package org.ggp.base.util.presence;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ggp.base.util.gdl.grammar.DataFormat;
+import org.ggp.base.util.gdl.grammar.GdlPool;
 import org.ggp.base.util.symbol.factory.SymbolFactory;
 import org.ggp.base.util.symbol.factory.exceptions.SymbolFormatException;
 import org.ggp.base.util.symbol.grammar.Symbol;
@@ -94,6 +96,9 @@ public class InfoResponse {
 
 	public Symbol toSymbol() {
 		List<Symbol> infoList = new ArrayList<Symbol>();
+		if (GdlPool.format == DataFormat.HRF) {
+			infoList.add(SymbolPool.getAtom("info"));
+		}
 		if (name != null) {
 			infoList.add(getKeyValueSymbol("name", name));
 		}
@@ -103,6 +108,7 @@ public class InfoResponse {
 		if (species != null) {
 			infoList.add(getKeyValueSymbol("species", species));
 		}
-		return SymbolPool.getList(infoList);
+		SymbolList list = SymbolPool.getList(infoList);
+		return list;
 	}
 }

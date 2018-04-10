@@ -39,7 +39,13 @@ public final class GdlDistinct extends GdlLiteral
 	@Override
 	public String toString()
 	{
-		return "( distinct " + arg1 + " " + arg2 + " )";
+		switch (GdlPool.format) {
+			case HRF:
+				return "distinct( " + arg1 + ", " + arg2 + ")";
+			case KIF:
+				return "( distinct " + arg1 + " " + arg2 + " )";
+		}
+		return null;
 	}
 
 }

@@ -19,7 +19,7 @@ public class ProjectSearcher {
         System.out.println(GAME_CANVASES);
 	}
 
-    private static final Reflections REFLECTIONS = new Reflections();
+    private static final Reflections REFLECTIONS = new Reflections("");
 
     public static final LoadedClasses<Gamer> GAMERS = new LoadedClasses<Gamer>(Gamer.class);
     public static final LoadedClasses<IIGamer> IIGAMERS = new LoadedClasses<IIGamer>(IIGamer.class);

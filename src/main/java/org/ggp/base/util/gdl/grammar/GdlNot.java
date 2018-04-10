@@ -32,7 +32,13 @@ public final class GdlNot extends GdlLiteral
 	@Override
 	public String toString()
 	{
-		return "( not " + body + " )";
+		switch (GdlPool.format) {
+			case HRF:
+				return "~ " + body;
+			case KIF:
+				return "( not " + body + " )";
+		}
+		return null;
 	}
 
 }

@@ -63,6 +63,10 @@ public final class GdlPool
     public static final GdlConstant ROLE = getConstant("role");
     public static final GdlConstant TERMINAL = getConstant("terminal");
     public static final GdlConstant TRUE = getConstant("true");
+
+    // Determines the expected format of data for communication and parsing
+    public static DataFormat format = DataFormat.KIF;
+
     /**
      * Represents a single underscore ("_"). The underscore is not a GDL keyword, but
      * it's used by SentenceForms and is generally convenient for utility methods.

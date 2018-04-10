@@ -6,6 +6,8 @@ import java.util.List;
 import org.ggp.base.util.gdl.factory.GdlFactory;
 import org.ggp.base.util.gdl.factory.exceptions.GdlFormatException;
 import org.ggp.base.util.gdl.grammar.Gdl;
+import org.ggp.base.util.gdl.grammar.GdlPool;
+import org.ggp.base.util.symbol.factory.HRFSymbolFactory;
 import org.ggp.base.util.symbol.factory.SymbolFactory;
 import org.ggp.base.util.symbol.factory.exceptions.SymbolFormatException;
 import org.ggp.base.util.symbol.grammar.SymbolList;
@@ -143,8 +145,21 @@ public final class Game {
     public List<Gdl> getRules() {
     	try {
 	        List<Gdl> rules = new ArrayList<Gdl>();
-	        SymbolList list = (SymbolList) SymbolFactory.create(theRulesheet);
-	        for (int i = 0; i < list.size(); i++)
+	        SymbolList list = null;
+	        int i = 0;
+	        switch (GdlPool.format) {
+		        case HRF:
+		        	list = (SymbolList) HRFSymbolFactory.create(theRulesheet);
+		        	++i;
+		        	break;
+		        case KIF:
+		        	list = (SymbolList) SymbolFactory.create(theRulesheet);
+		        	break;
+		        default:
+		        	throw new SymbolFormatException("Data Format is not defined.");
+		    }
+
+	        for (; i < list.size(); i++)
 	        {
 	            rules.add(GdlFactory.create(list.get(i)));
 	        }

@@ -68,12 +68,25 @@ public final class GdlRule extends Gdl
 	{
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("( <= " + head + " ");
-		for (GdlLiteral literal : body)
-		{
-			sb.append(literal + " ");
+		switch (GdlPool.format) {
+			case HRF:
+				sb.append(head + " :- ");
+				for (int i=0; i<body.size(); i++) {
+					sb.append(body.get(i));
+					if (i < body.size()-1) {
+						sb.append(", ");
+					}
+				}
+				sb.append(")");
+				break;
+
+			case KIF:
+				sb.append("( <= " + head + " ");
+				for (GdlLiteral literal : body) {
+					sb.append(literal + " ");
+				}
+				break;
 		}
-		sb.append(")");
 
 		return sb.toString();
 	}

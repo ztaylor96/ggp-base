@@ -90,7 +90,7 @@ public final class GdlFactory
 			SymbolList list = (SymbolList) symbol;
 			SymbolAtom type = (SymbolAtom) list.get(0);
 
-			if (type.getValue().equals("<="))
+			if (type.getValue().equals("<=") || type.getValue().equals("rule"))
 			{
 				return createRule(list);
 			}
@@ -193,7 +193,7 @@ public final class GdlFactory
 		if (symbol instanceof SymbolAtom)
 		{
 			SymbolAtom atom = (SymbolAtom) symbol;
-			if (atom.getValue().charAt(0) == '?')
+			if (atom.getValue().charAt(0) == '?' || Character.isUpperCase(atom.getValue().charAt(0)))
 			{
 				return createVariable(atom);
 			}
