@@ -107,7 +107,7 @@ public final class PollingGamePlayer extends AbstractGamePlayer
 
 				Request request = new RequestFactory().create(gamer, in);
 				String out = request.process(System.currentTimeMillis());
-				System.out.println(out);
+				//System.out.println(out);
 
 				sendPost(out, parseMessageId(in));
 				notifyObservers(new PlayerSentMessageEvent(out));
@@ -197,10 +197,10 @@ public final class PollingGamePlayer extends AbstractGamePlayer
 		wr.close();
 
 		int responseCode = con.getResponseCode();
-		System.out.println("\nSending 'POST' request to URL : " + putUrl);
-		System.out.println("Post parameters : " + params);
-		System.out.println("Message : " + message);
-		System.out.println("Response Code : " + responseCode);
+		//System.out.println("\nSending 'POST' request to URL : " + putUrl);
+		//System.out.println("Post parameters : " + params);
+		//System.out.println("Message : " + message);
+		//System.out.println("Response Code : " + responseCode);
 	}
 
 
