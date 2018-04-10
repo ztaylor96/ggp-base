@@ -274,6 +274,12 @@ public final class Player extends JPanel implements ItemListener
 
 					defaultPort++;
 					portTextField.setText(defaultPort.toString());
+
+					//allow setting the message format only once,
+					//since it is currently a static variable
+					if (msgFormatBox.isEnabled()) {
+						msgFormatBox.setEnabled(false);
+					}
 				}
 				catch (Exception e)
 				{

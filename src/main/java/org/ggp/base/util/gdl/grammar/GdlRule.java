@@ -74,10 +74,9 @@ public final class GdlRule extends Gdl
 				for (int i=0; i<body.size(); i++) {
 					sb.append(body.get(i));
 					if (i < body.size()-1) {
-						sb.append(", ");
+						sb.append(" & ");
 					}
 				}
-				sb.append(")");
 				break;
 
 			case KIF:
@@ -85,6 +84,7 @@ public final class GdlRule extends Gdl
 				for (GdlLiteral literal : body) {
 					sb.append(literal + " ");
 				}
+				sb.append(")");
 				break;
 		}
 

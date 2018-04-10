@@ -93,6 +93,14 @@ public final class PollingGamePlayer extends AbstractGamePlayer
 	@Override
 	public void run()
 	{
+		//flush the message queue in case there are ghost messages from previous instances
+		try {
+			String flushed = sendGet();
+			while (flushed != null && flushed.length() > 0) {
+				flushed = sendGet();
+			}
+		} catch (IOException e1) {/*noop*/}
+
 		while (true) {
 			try {
 				String in = sendGet();
@@ -152,10 +160,8 @@ public final class PollingGamePlayer extends AbstractGamePlayer
 		// optional default is GET
 		con.setRequestMethod("GET");
 
-		int responseCode = con.getResponseCode();
-
 		//System.out.println("\nSending 'GET' request to URL : " + url);
-		//System.out.println("Response Code : " + responseCode);
+		//System.out.println("Response Code : " + con.getResponseCode();
 
 		BufferedReader in = new BufferedReader(
 		        new InputStreamReader(con.getInputStream()));
@@ -167,8 +173,7 @@ public final class PollingGamePlayer extends AbstractGamePlayer
 		}
 		in.close();
 
-		String msg = response.toString();
-		//System.out.println("response: " + msg);
+		//System.out.println("response: " + response.toString());
 
 		return response.toString();
 	}
