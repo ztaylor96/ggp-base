@@ -1,7 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import org.ggp.base.apps.player.detail.DetailPanel;
 import org.ggp.base.apps.player.detail.SimpleDetailPanel;
@@ -9,7 +9,9 @@ import org.ggp.base.player.gamer.event.GamerSelectedMoveEvent;
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
 import org.ggp.base.util.game.Game;
+import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
+import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
@@ -34,13 +36,51 @@ public final class SirtobyCompdelibGamer extends StateMachineGamer
 		long start = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		Move selection = (moves.get(new Random().nextInt(moves.size())));
+		Move selection = bestMove(getRole(), getCurrentState());
 
 		long stop = System.currentTimeMillis();
 
 		notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
 		return selection;
 	}
+
+	private Move bestMove(Role role, MachineState state) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	{
+		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+		Move action = actions.get(0);
+		int score = 0;
+		for (int i = 0; i < actions.size(); i++) {
+			List<Move> singleActionList = Arrays.asList(actions.get(i));
+			int result = maxscore(role, getStateMachine().findNext(singleActionList, state));
+	        if (result == 100) {
+	        	return actions.get(i);
+	        }
+	        if (result > score) {
+	        	score = result;
+	        	action = actions.get(i);
+	        }
+	    }
+	    return action;
+	}
+
+	private int maxscore (Role role, MachineState state) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	{
+		if (getStateMachine().findTerminalp(state)) {
+			return getStateMachine().findReward(role,state);
+		}
+		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+	    int score = 0;
+	    for (int i = 0; i < actions.size(); i++){
+	    	List<Move> singleActionList = Arrays.asList(actions.get(i));
+	    	int result = maxscore(role, getStateMachine().findNext(singleActionList, state));
+	    	if (result > score) {
+	        	score = result;
+	        }
+	    }
+	    return score;
+	 }
+
+
 
 	@Override
 	public StateMachine getInitialStateMachine() {
