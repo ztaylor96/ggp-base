@@ -1,4 +1,4 @@
-package org.ggp.base.player.gamer.statemachine.random;
+package org.ggp.base.player.gamer.statemachine.sirtoby;
 
 import java.util.List;
 import java.util.Random;
@@ -21,11 +21,11 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
  * RandomGamer is a very simple state-machine-based Gamer that will always
  * pick randomly from the legal moves it finds at any state in the game.
  */
-public final class RandomGamer extends StateMachineGamer
+public final class SirtobyRandomGamer extends StateMachineGamer
 {
 	@Override
 	public String getName() {
-		return "Random";
+		return "SirtobyRandom";
 	}
 
 	@Override
