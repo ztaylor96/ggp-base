@@ -92,17 +92,6 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 		nodesVisited += 1;	// count the first move (action parameter) as a jump to another node
 		for (int i = 0; i < allJointMoves.size(); i++) {
 			List<Move> moveSequence = allJointMoves.get(i);
-			if (System.currentTimeMillis() >= end) {
-	    		// no more time -- use heuristic to evaluate states one more full turn later
-	    		for (; i < allJointMoves.size(); i++) {
-	    	    	moveSequence = allJointMoves.get(i);
-					MachineState nextState = getStateMachine().findNext(moveSequence, state);
-	    			score = Math.min(score, getHeuristicScore(role, nextState));
-	    			if (score == 0) { return score; }
-	    		}
-	    		break;
-	    	}
-
 			MachineState nextState = getStateMachine().findNext(moveSequence, state);
 			nodesVisited += (moveSequence.size()-1); // count all the moves in the sequence as a node except first move,
 													// which is same for every branch this case

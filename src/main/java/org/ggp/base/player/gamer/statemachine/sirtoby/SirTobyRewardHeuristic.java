@@ -101,16 +101,6 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 		nodesVisited += 1;	// count the first move (action parameter) as a jump to another node
 		for (int i = 0; i < allJointMoves.size(); i++) {
 			List<Move> moveSequence = allJointMoves.get(i);
-			if (System.currentTimeMillis() >= end) {
-	    		// no more time -- use heuristic to evaluate states one more full turn later
-	    		for (int j = 0; j < allJointMoves.size(); j++) {
-	    	    	moveSequence = allJointMoves.get(j);
-					MachineState nextState = getStateMachine().findNext(moveSequence, state);
-	    			score = Math.min(score, getHeuristicScore(role, nextState));
-	    			if (score == 0) { return score; }
-	    		}
-	    		break;
-	    	}
 
 			MachineState nextState = getStateMachine().findNext(moveSequence, state);
 			nodesVisited += (moveSequence.size()-1); // count all the moves in the sequence as a node except first move,
@@ -163,6 +153,7 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 	 }
 
 	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException {
+		System.out.println(getStateMachine().findReward(role, state));
 		return getStateMachine().findReward(role, state);
 	}
 
