@@ -20,13 +20,13 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class SirTobyMobilityHeuristic extends StateMachineGamer
+public final class SirTobyFocusHeuristic extends StateMachineGamer
 {
 	private int nodesVisited = 0;
 
 	@Override
 	public String getName() {
-		return "SirTobyMobile";
+		return "SirTobyFocused";
 	}
 
 	@Override
@@ -97,7 +97,10 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 	    		for (; i < allJointMoves.size(); i++) {
 	    	    	moveSequence = allJointMoves.get(i);
 					MachineState nextState = getStateMachine().findNext(moveSequence, state);
-	    			score = Math.min(score, getHeuristicScore(role, nextState));
+					StateMachine sm = getStateMachine();
+					int numRoles = sm.getRoles().size();
+		    		Role opponent = sm.getRoles().get((sm.getRoleIndices().get(role) + 1) % numRoles);
+					score = Math.min(score, getHeuristicScore(opponent, nextState));
 	    			if (score == 0) { return score; }
 	    		}
 	    		break;
@@ -114,14 +117,6 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 		return score;
 	}
 
-	private Role findOpponent(Role role) {
-		StateMachine sm = getStateMachine();
-		int numRoles = sm.getRoles().size();
-		Role opponent = sm.getRoles().get((sm.getRoleIndices().get(role) + 1) % numRoles);
-		return opponent;
-	}
-
-
 	private int maxscore(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		if (getStateMachine().findTerminalp(state)) {
@@ -135,7 +130,9 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 	    	if (System.currentTimeMillis() >= end) {
 	    		// no more time -- use heuristic to evaluate this state since we
 	    		// couldn't do an exhaustive search
-	    		score = Math.max(score, getHeuristicScore(role, state));
+	    		StateMachine sm = getStateMachine();
+	    		Role opponent = sm.getRoles().get(sm.getRoleIndices().get(role) + 1);
+	    		score = Math.max(score, getHeuristicScore(opponent, state));
 	    		break;
 	    	}
 
@@ -154,9 +151,7 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 	 }
 
 	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException {
-		return getStateMachine().findLegals(role,state).size() / getStateMachine().findActions(role).size() * 100;
-
-		//return Math.min(99, 15*getStateMachine().getLegalMoves(state, role).size()); // scale by 15 (?), cap at 99
+		return 100 - (getStateMachine().findLegals(role,state).size() / getStateMachine().findActions(role).size() * 100);
 	}
 
 	@Override

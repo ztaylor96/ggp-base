@@ -20,14 +20,14 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class DepthLimitedMinimax extends StateMachineGamer
+public final class SirtobyDepthLimited extends StateMachineGamer
 {
 	private int nodesVisited = 0;
 	private int LIMIT = 6;
 
 	@Override
 	public String getName() {
-		return "DepthLimitedMinimax";
+		return "SirtobyDepthLimited";
 	}
 
 	@Override

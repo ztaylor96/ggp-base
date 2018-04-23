@@ -20,30 +20,37 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class SirTobyMobilityHeuristic extends StateMachineGamer
+public final class SirTobyRewardHeuristic extends StateMachineGamer
 {
 	private int nodesVisited = 0;
+	private int minScoresCalled = 0;
+	private int maxScoresCalled = 0;
 
 	@Override
 	public String getName() {
-		return "SirTobyMobile";
+		return "SirTobyReward";
 	}
 
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
+		System.out.println("\n\nSelecting move.");
 		nodesVisited = 0;
+		minScoresCalled = 0;
+		maxScoresCalled = 0;
 		long start = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		long buffer = (long) ((timeout - start) * 0.25); // use 90% of available time
-		System.out.println("buffer: " + buffer);
+		long buffer = (long) ((timeout - start) * 0.10); // use 90% of available time
+		//System.out.println("buffer: " + buffer);
 		Move selection = bestMove(getRole(), getCurrentState(), timeout - buffer);
 
 		long stop = System.currentTimeMillis();
 
 		notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
 		System.out.println("Num nodes visited: " + nodesVisited);
+		System.out.println("Minscores called: " + minScoresCalled);
+		System.out.println("Maxscores called: " + maxScoresCalled);
 		System.out.println("Time used: " + (stop-start));
 		return selection;
 	}
@@ -55,6 +62,7 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 		int score = 0;
 		if (getStateMachine().getLegalMoves(state, role).size() == 1) {
 			nodesVisited += 1;	// pretend we visited the 1 legal node then return
+			System.out.println("only one legal move, returning now");
 			return getStateMachine().getLegalMoves(state, role).get(0);
 		}
 
@@ -85,6 +93,7 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 	}
 
 	private int minscore(Role role, Move action, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+		minScoresCalled += 1;
 		int score = 100;
 		List<List<Move>> allJointMoves = getStateMachine().getLegalJointMoves(state, role, action);
 		long start = System.currentTimeMillis();
@@ -94,8 +103,8 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 			List<Move> moveSequence = allJointMoves.get(i);
 			if (System.currentTimeMillis() >= end) {
 	    		// no more time -- use heuristic to evaluate states one more full turn later
-	    		for (; i < allJointMoves.size(); i++) {
-	    	    	moveSequence = allJointMoves.get(i);
+	    		for (int j = 0; j < allJointMoves.size(); j++) {
+	    	    	moveSequence = allJointMoves.get(j);
 					MachineState nextState = getStateMachine().findNext(moveSequence, state);
 	    			score = Math.min(score, getHeuristicScore(role, nextState));
 	    			if (score == 0) { return score; }
@@ -121,9 +130,9 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 		return opponent;
 	}
 
-
 	private int maxscore(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
+		maxScoresCalled += 1;
 		if (getStateMachine().findTerminalp(state)) {
 			return getStateMachine().findReward(role,state);
 		}
@@ -153,10 +162,8 @@ public final class SirTobyMobilityHeuristic extends StateMachineGamer
 	    return score;
 	 }
 
-	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException {
-		return getStateMachine().findLegals(role,state).size() / getStateMachine().findActions(role).size() * 100;
-
-		//return Math.min(99, 15*getStateMachine().getLegalMoves(state, role).size()); // scale by 15 (?), cap at 99
+	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException {
+		return getStateMachine().findReward(role, state);
 	}
 
 	@Override
