@@ -1,5 +1,6 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.ggp.base.apps.player.detail.DetailPanel;
@@ -22,7 +23,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 public final class DepthLimitedMinimax extends StateMachineGamer
 {
 	private int nodesVisited = 0;
-	final int LIMIT = 6;
+	private int LIMIT = 6;
 
 	@Override
 	public String getName() {
@@ -36,7 +37,6 @@ public final class DepthLimitedMinimax extends StateMachineGamer
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move selection = bestMove(getRole(), getCurrentState());
-
 		long stop = System.currentTimeMillis();
 
 		notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
@@ -46,6 +46,7 @@ public final class DepthLimitedMinimax extends StateMachineGamer
 	private Move bestMove(Role role, MachineState state) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		nodesVisited += 1;
+
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);
 		Move action = actions.get(0);
 		int score = 0;
@@ -55,8 +56,16 @@ public final class DepthLimitedMinimax extends StateMachineGamer
 			return getStateMachine().getLegalMoves(state, role).get(0);
 		}
 
+		boolean singlePlayer = (getStateMachine().getRoles().size() == 1);
+
 		for (Move move: getStateMachine().getLegalMoves(state, role)) {
-			int result = minscore(role, move, state, 0);
+			int result;
+			if (singlePlayer) {
+				LIMIT = 8;
+				result = singlePlayerMaxscore(role, state, 0);
+			} else {
+				result = minscore(role, move, state, 0);
+			}
 			//System.out.println("exploring move: " + move.toString());
 	        if (result == 100) { return move; }
 	        //System.out.println("got minscore: " + result);
@@ -111,6 +120,27 @@ public final class DepthLimitedMinimax extends StateMachineGamer
 	    return score;
 	 }
 
+	private int singlePlayerMaxscore(Role role, MachineState state, int level) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	{
+
+		if (getStateMachine().findTerminalp(state)) {
+			return getStateMachine().findReward(role,state);
+		}
+		if (level >= LIMIT) {
+			System.out.println("Returning");
+			return 0;
+		}
+		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+	    int score = 0;
+	    for (int i = 0; i < actions.size(); i++){
+	    	List<Move> singleActionList = Arrays.asList(actions.get(i));
+	    	int result = singlePlayerMaxscore(role, getStateMachine().findNext(singleActionList, state), level + 1);
+	    	if (result > score) {
+	        	score = result;
+	        }
+	    }
+	    return score;
+	 }
 
 	@Override
 	public StateMachine getInitialStateMachine() {
