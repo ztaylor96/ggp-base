@@ -20,7 +20,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class SirTobyRewardHeuristic extends StateMachineGamer
+public final class SirTobyCombative extends StateMachineGamer
 {
 	private int nodesVisited = 0;
 	private int minScoresCalled = 0;
@@ -28,7 +28,7 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 
 	@Override
 	public String getName() {
-		return "SirTobyReward";
+		return "SirTobyCombative";
 	}
 
 	@Override
@@ -126,6 +126,11 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 		if (getStateMachine().findTerminalp(state)) {
 			return getStateMachine().findReward(role,state);
 		}
+		if (System.currentTimeMillis() >= end) {
+    		// no more time -- use heuristic to evaluate this state since we
+    		// couldn't do an exhaustive search
+    		return getHeuristicScore(role, state);
+    	}
 	    int score = 0;
 	    List<Move> moves = getStateMachine().getLegalMoves(state, role);
 	    long time_per_branch = (end - System.currentTimeMillis()) / moves.size();
@@ -153,7 +158,7 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 	 }
 
 	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException {
-		return getStateMachine().findReward(role, state);
+		return getStateMachine().findReward(role, state);// - getStateMachine().findReward(findOpponent(role), state);
 	}
 
 	@Override

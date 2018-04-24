@@ -20,7 +20,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class SirTobyRewardHeuristic extends StateMachineGamer
+public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 {
 	private int nodesVisited = 0;
 	private int minScoresCalled = 0;
@@ -28,7 +28,7 @@ public final class SirTobyRewardHeuristic extends StateMachineGamer
 
 	@Override
 	public String getName() {
-		return "SirTobyReward";
+		return "SirTobyAlive";
 	}
 
 	@Override

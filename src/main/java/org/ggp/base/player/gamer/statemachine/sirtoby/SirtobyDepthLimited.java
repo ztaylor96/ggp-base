@@ -1,6 +1,8 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.ggp.base.apps.player.detail.DetailPanel;
@@ -23,7 +25,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 public final class SirtobyDepthLimited extends StateMachineGamer
 {
 	private int nodesVisited = 0;
-	private int LIMIT = 6;
+	private int LIMIT = 5;
 
 	@Override
 	public String getName() {
@@ -36,6 +38,9 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 		long start = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
+		ArrayList ShuffledMoves = new ArrayList(moves);
+		Collections.shuffle(ShuffledMoves);
+		moves = ShuffledMoves;
 		Move selection = bestMove(getRole(), getCurrentState());
 		long stop = System.currentTimeMillis();
 
@@ -108,7 +113,7 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 
 		if (level >= LIMIT) {
 			System.out.println("Returning");
-			return 0;
+			return getHeuristicScore(role, state);
 		}
 
 	    int score = 0;
@@ -117,6 +122,7 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 	    	if (result == 100) { return result; }
 	    	if (result > score) { score = result; }
 	    }
+	    System.out.println("Returning" + score);
 	    return score;
 	 }
 
@@ -141,6 +147,10 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 	    }
 	    return score;
 	 }
+
+	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException {
+		return getStateMachine().findReward(role, state);
+	}
 
 	@Override
 	public StateMachine getInitialStateMachine() {
