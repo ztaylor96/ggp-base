@@ -38,9 +38,6 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 		long start = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		ArrayList ShuffledMoves = new ArrayList(moves);
-		Collections.shuffle(ShuffledMoves);
-		moves = ShuffledMoves;
 		Move selection = bestMove(getRole(), getCurrentState());
 		long stop = System.currentTimeMillis();
 
@@ -53,6 +50,9 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 		nodesVisited += 1;
 
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+		ArrayList<Move> ShuffledMoves = new ArrayList<Move>(actions);
+		Collections.shuffle(ShuffledMoves);
+		actions = ShuffledMoves;
 		Move action = actions.get(0);
 		int score = 0;
 
@@ -113,7 +113,8 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 
 		if (level >= LIMIT) {
 			System.out.println("Returning");
-			return getHeuristicScore(role, state);
+			return 0;
+			//return getHeuristicScore(role, state);
 		}
 
 	    int score = 0;
