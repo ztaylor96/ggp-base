@@ -1,5 +1,6 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 	{
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);
 		Move action = actions.get(0);
-		int score = 0;
+		List<Integer> score = new ArrayList<Integer>(2);
 		if (getStateMachine().getLegalMoves(state, role).size() == 1) {
 			nodesVisited += 1;	// pretend we visited the 1 legal node then return
 			System.out.println("only one legal move, returning now");
@@ -70,8 +71,11 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 		long start = System.currentTimeMillis();
 		long time_per_branch = (end - start) / moves.size();
 		int i = 1;
+		List<Integer> minmax = new ArrayList<Integer>(2);
+	    minmax.add(0);
+	    minmax.add(0);
 		for (Move move: moves) {
-			int result;
+			List<Integer> result;
 			long end_time = start + time_per_branch*i;
 			if (getStateMachine().getRoles().size() == 1) {
 				nodesVisited += 1;
@@ -80,37 +84,42 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 			} else {
 				result = minscore(role, move, state, end_time);
 			}
-
-	        if (result == 100) { return move; }
-	        if (result > score) {
-	        	score = result;
-	        	action = move;
-	        }
+			if (result.get(0) > score.get(0) || (result.get(0) != 100 && result.get(0) == score.get(0) && result.get(1) > score.get(1))) {
+	    		score = result;
+	    		action = move;
+	    	}
 	        i++;
 	    }
 		System.out.println("Score: " + score);
 	    return action;
 	}
 
-	private int minscore(Role role, Move action, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+	private List<Integer> minscore(Role role, Move action, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		minScoresCalled += 1;
 		int score = 100;
 		List<List<Move>> allJointMoves = getStateMachine().getLegalJointMoves(state, role, action);
+		List<Integer> minmax = new ArrayList<Integer>(2);
 		long start = System.currentTimeMillis();
 		long time_per_branch = (end - start) / allJointMoves.size();
 		nodesVisited += 1;	// count the first move (action parameter) as a jump to another node
+		MachineState nextState = new MachineState();
 		for (int i = 0; i < allJointMoves.size(); i++) {
 			List<Move> moveSequence = allJointMoves.get(i);
 
-			MachineState nextState = getStateMachine().findNext(moveSequence, state);
+			nextState = getStateMachine().findNext(moveSequence, state);
 			nodesVisited += (moveSequence.size()-1); // count all the moves in the sequence as a node except first move,
 													// which is same for every branch this case
-			int result = maxscore(role, nextState, start + time_per_branch*(i+1));
-			if (result == 0) { return 0; }
+			int result = maxscore(role, nextState, start + time_per_branch*(i+1)).get(0);
 			score = Math.min(score, result);
 			i++;
 		}
-		return score;
+		minmax.add(score);
+		if (getStateMachine().findTerminalp(nextState)) {
+			minmax.add(score);
+		} else {
+			minmax.add(100);
+		}
+		return minmax;
 	}
 
 	private Role findOpponent(Role role) {
@@ -120,13 +129,18 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 		return opponent;
 	}
 
-	private int maxscore(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	private List<Integer> maxscore(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		maxScoresCalled += 1;
 		if (getStateMachine().findTerminalp(state)) {
-			return getStateMachine().findReward(role,state);
+			List<Integer> val = new ArrayList<Integer>(2);
+			val.add(getStateMachine().findReward(role,state));
+			val.add(getStateMachine().findReward(role,state));
+			return val;
 		}
-	    int score = 0;
+	    List<Integer> score = new ArrayList<Integer>(2);
+	    score.add(0);
+	    score.add(0);
 	    List<Move> moves = getStateMachine().getLegalMoves(state, role);
 	    long time_per_branch = (end - System.currentTimeMillis()) / moves.size();
 	    for (int i = 0; i < moves.size(); i++) {
@@ -134,11 +148,12 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 	    	if (System.currentTimeMillis() >= end) {
 	    		// no more time -- use heuristic to evaluate this state since we
 	    		// couldn't do an exhaustive search
-	    		score = Math.max(score, getHeuristicScore(role, state));
+	    		score.add(0, Math.max(score.get(0), getHeuristicScore(role, state)));
+	    		score.add(1, 100);
 	    		break;
 	    	}
 
-	    	int result;
+	    	List<Integer> result;
 	    	if (getStateMachine().getRoles().size() == 1) {
 	    		nodesVisited += 1;
 				MachineState nextState = getStateMachine().findNext(Arrays.asList(move), state);
@@ -146,8 +161,9 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 			} else {
 				result = minscore(role, move, state, end + time_per_branch*(i+1));
 			}
-	    	if (result == 100) { return result; }
-	    	score = Math.max(score, result);
+	    	if (result.get(0) > score.get(0) || (result.get(0) != 100 && result.get(0) == score.get(0) && result.get(1) > score.get(1))) {
+	    		score = result;
+	    	}
 	    }
 	    return score;
 	 }
