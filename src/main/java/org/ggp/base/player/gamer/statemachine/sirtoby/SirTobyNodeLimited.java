@@ -20,15 +20,16 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class SirTobyTimeLimited extends StateMachineGamer
+public final class SirTobyNodeLimited extends StateMachineGamer
 {
 	private int nodesVisited = 0;
 	private int bestScore = 0;
 	private Move bestMove = null;
+	private static final int NODE_LIMIT = 900000;
 
 	@Override
 	public String getName() {
-		return "SirTobyTimeLimited";
+		return "SirTobyNodeLimited";
 	}
 
 	@Override
@@ -42,16 +43,8 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 		long buffer = (long) ((timeout - start) * 0.1);	// use 90% of available time
 		long end = timeout - buffer;
 
-		int depth = 8;
+		int depth = 1; // unused var
 		bestMove(getRole(), getCurrentState(), end, depth);
-		while (true) {
-			depth += 1;
-			System.out.println("Starting depth " + depth);
-			bestMove(getRole(), getCurrentState(), timeout - buffer, depth);
-			if (bestScore == 100) { break; }
-			if (System.currentTimeMillis() >= end) { break; }
-			if (depth >= 40) { break; }
-		}
 		long stop = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
@@ -91,7 +84,7 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 	        	System.out.println("new best action: " + bestMove);
 	        }
 	        if (bestScore == 100) { System.out.println("**** found a perfect move: " + bestMove); break;}
-	        if (System.currentTimeMillis() >= end) { break; }
+	        if (nodesVisited >= NODE_LIMIT) { break; }
 	    }
 
 	    return bestMove;
@@ -100,13 +93,14 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 	private int minscore(Role role, Move action, MachineState state, int level, int limit, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		if (getStateMachine().findTerminalp(state)) { return getStateMachine().findReward(role,state); }
 
-		if (level >= limit || System.currentTimeMillis() >= end) {
+		if (nodesVisited >= NODE_LIMIT || System.currentTimeMillis() >= end) {
 			return getHeuristicScore(role, state);
 		}
 
 		int score = 100;
 		List<List<Move>> allJointMoves = getStateMachine().getLegalJointMoves(state, role, action);
 		for (List<Move> moveSequence: allJointMoves) {
+			nodesVisited += 1;
 			MachineState nextState = getStateMachine().findNext(moveSequence, state);
 			int result = maxscore(role, nextState, level + 1, limit, end);
 			if (result == 0) { return 0; }
@@ -119,7 +113,7 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 	{
 		nodesVisited += 1;
 		if (getStateMachine().findTerminalp(state)) { return getStateMachine().findReward(role,state); }
-		if (level >= limit || System.currentTimeMillis() >= end) { return getHeuristicScore(role, state); }
+		if (nodesVisited >= NODE_LIMIT || System.currentTimeMillis() >= end) { return getHeuristicScore(role, state); }
 
 	    int score = 0;
 	    for (Move action: getStateMachine().getLegalMoves(state, role)){
@@ -134,11 +128,11 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 	private int singlePlayerMaxscore(Role role, MachineState state, int level, int limit, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		if (getStateMachine().findTerminalp(state)) { return getStateMachine().findReward(role,state); }
-		if (level >= limit || System.currentTimeMillis() >= end) { return getHeuristicScore(role, state); }
+		if (nodesVisited >= NODE_LIMIT || System.currentTimeMillis() >= end) { return getHeuristicScore(role, state); }
 
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);
 	    int score = 0;
-	    for (int i = 0; i < actions.size(); i++){
+	    for (int i = 0; i < actions.size(); i++) {
 	    	nodesVisited += 1;	// visit move that comes from taking this action
 	    	List<Move> singleActionList = Arrays.asList(actions.get(i));
 	    	int result = singlePlayerMaxscore(role, getStateMachine().findNext(singleActionList, state), level + 1, limit, end);
