@@ -88,7 +88,7 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 
 		System.out.println("Level " + level);
 		if (level >= LIMIT) {
-			System.out.println("Returning");
+			//System.out.println("Returning");
 			return 0;
 		}
 
@@ -112,7 +112,7 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 		}
 
 		if (level >= LIMIT) {
-			System.out.println("Returning");
+			//System.out.println("Returning");
 			return 0;
 			//return getHeuristicScore(role, state);
 		}
@@ -134,7 +134,7 @@ public final class SirtobyDepthLimited extends StateMachineGamer
 			return getStateMachine().findReward(role,state);
 		}
 		if (level >= LIMIT) {
-			System.out.println("Returning");
+			//System.out.println("Returning");
 			return 0;
 		}
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);

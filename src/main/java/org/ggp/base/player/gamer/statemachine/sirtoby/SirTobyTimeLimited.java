@@ -1,6 +1,8 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.ggp.base.apps.player.detail.DetailPanel;
@@ -36,101 +38,150 @@ public final class SirTobyTimeLimited extends StateMachineGamer
 		long start = System.currentTimeMillis();
 
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		long buffer = (long) ((timeout - start) * 0.10);	// use 90% of available time
+		long buffer = (long) ((timeout - start) * 0.5);	// use 90% of available time
 		System.out.println("buffer: " + buffer);
-		Move selection = bestMove(getRole(), getCurrentState(), timeout - buffer);
 
+		int depth = 1;
+		Move selection = bestMove(getRole(), getCurrentState(), timeout - buffer, depth);
+		Move previousSelection = selection;
+
+		while (selection != null) {
+			depth += 1;
+			previousSelection = selection;
+			System.out.println("Starting depth " + depth);
+			selection = bestMove(getRole(), getCurrentState(), timeout - buffer, depth);
+			System.out.println(selection);
+			if (depth > 100) { break; }
+		}
+		System.out.println("finished searching");
 		long stop = System.currentTimeMillis();
 
-		notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
+		notifyObservers(new GamerSelectedMoveEvent(moves, previousSelection, stop - start));
 		System.out.println("Num nodes visited: " + nodesVisited);
 		System.out.println("Time used: " + (stop-start));
-		return selection;
+		return previousSelection;
 	}
 
-	private Move bestMove(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	private Move bestMove(Role role, MachineState state, long end, int limit) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
+		nodesVisited += 1;
+
 		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+		ArrayList<Move> ShuffledMoves = new ArrayList<Move>(actions);
+		Collections.shuffle(ShuffledMoves);
+		actions = ShuffledMoves;
 		Move action = actions.get(0);
 		int score = 0;
 
+		//System.out.println(getStateMachine().getLegalMoves(state, role).toString());
 		if (getStateMachine().getLegalMoves(state, role).size() == 1) {
-			nodesVisited += 1;	// pretend we visited the 1 legal node then return
 			return getStateMachine().getLegalMoves(state, role).get(0);
 		}
 
-		List<Move> moves = getStateMachine().getLegalMoves(state, role);
-		long start = System.currentTimeMillis();
-		long time_per_branch = (end - start) / moves.size();
-		int i = 1;
-		for (Move move: moves) {
-			int result;
-			long end_time = start + time_per_branch*i;
-			i++;
-			if (getStateMachine().getRoles().size() == 1) {
-				nodesVisited += 1;
-				MachineState nextState = getStateMachine().findNext(Arrays.asList(move), state);
-				result = maxscore(role, nextState, end_time);
-			} else {
-				result = minscore(role, move, state, end_time);
-			}
+		boolean singlePlayer = (getStateMachine().getRoles().size() == 1);
 
+		for (Move move: getStateMachine().getLegalMoves(state, role)) {
+			int result;
+			if (singlePlayer) {
+				result = singlePlayerMaxscore(role, state, 0, limit, end);
+				if (result == -1) { return null; }
+			} else {
+				result = minscore(role, move, state, 0, limit, end);
+				if (result == -1) { return null; }
+			}
+			//System.out.println("exploring move: " + move.toString());
 	        if (result == 100) { return move; }
+	        //System.out.println("got minscore: " + result);
 	        if (result > score) {
 	        	score = result;
 	        	action = move;
 	        }
 	    }
-
+		System.out.println("nodes visited" + nodesVisited);
 	    return action;
 	}
 
-	private int minscore(Role role, Move action, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+	private int minscore(Role role, Move action, MachineState state, int level, int limit, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+		nodesVisited += 1;
+
+		//System.out.println("Level " + level);
+		if (level >= limit) {
+			//System.out.println("Returning");
+			return 0;
+		}
+		if (System.currentTimeMillis() > end) {
+			return -1;
+		}
+
 		int score = 100;
 		List<List<Move>> allJointMoves = getStateMachine().getLegalJointMoves(state, role, action);
-		long start = System.currentTimeMillis();
-		long time_per_branch = (end - start) / allJointMoves.size();
-		int i = 1;
-		nodesVisited += 1;	// count the first move (action parameter) as a jump to another node
 		for (List<Move> moveSequence: allJointMoves) {
-			if (System.currentTimeMillis() >= end) { break; }
-			MachineState nextState = getStateMachine().findNext(moveSequence, state);
-			nodesVisited += (moveSequence.size()-1); // count all the moves in the sequence as a node except first move,
-													// which is same for every branch this case
-			int result = maxscore(role, nextState, start + time_per_branch*i);
+			MachineState simulatedNextState = getStateMachine().findNext(moveSequence, state);
+			int result = maxscore(role, simulatedNextState, level + 1, limit, end);
+			if (result == -1) { return -1; }
 			if (result == 0) { return 0; }
 			if (result < score) { score = result; }
-			i++;
 		}
 		return score;
 	}
 
-	private int maxscore(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	private int maxscore(Role role, MachineState state, int level, int limit, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
+		//System.out.println("Level " + level);
+		nodesVisited += 1;
 		if (getStateMachine().findTerminalp(state)) {
 			return getStateMachine().findReward(role,state);
 		}
+
+		if (level >= limit) {
+			//System.out.println("Returning");
+			//return 0;
+			return getHeuristicScore(role, state);
+		}
+		if (System.currentTimeMillis() > end) {
+			return -1;
+		}
+
 	    int score = 0;
-	    List<Move> moves = getStateMachine().getLegalMoves(state, role);
-	    long time_per_branch = (end - System.currentTimeMillis()) / moves.size();
-	    int i = 0;
-	    for (Move move: moves) {
-	    	if (System.currentTimeMillis() >= end) { break; }
-	    	int result;
-	    	if (getStateMachine().getRoles().size() == 1) {
-	    		nodesVisited += 1;
-				MachineState nextState = getStateMachine().findNext(Arrays.asList(move), state);
-				result = maxscore(role, nextState, end + time_per_branch*i);
-			} else {
-				result = minscore(role, move, state, end + time_per_branch*i);
-			}
+	    for (Move action: getStateMachine().getLegalMoves(state, role)){
+	    	int result = minscore(role, action, state, level, limit, end);
+	    	if (result == -1) { return -1; }
 	    	if (result == 100) { return result; }
 	    	if (result > score) { score = result; }
-	    	i++;
+	    }
+	    //System.out.println("Returning" + score);
+	    return score;
+	 }
+
+	private int singlePlayerMaxscore(Role role, MachineState state, int level, int limit, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
+	{
+
+		if (getStateMachine().findTerminalp(state)) {
+			return getStateMachine().findReward(role,state);
+		}
+		if (level >= limit) {
+			//System.out.println("Returning");
+			//return 0;
+			return getHeuristicScore(role, state);
+		}
+		if (System.currentTimeMillis() > end) {
+			return -1;
+		}
+		List<Move> actions = getStateMachine().getLegalMoves(state, role);
+	    int score = 0;
+	    for (int i = 0; i < actions.size(); i++){
+	    	List<Move> singleActionList = Arrays.asList(actions.get(i));
+	    	int result = singlePlayerMaxscore(role, getStateMachine().findNext(singleActionList, state), level + 1, limit, end);
+	    	if (result > score) {
+	        	score = result;
+	        }
 	    }
 	    return score;
 	 }
 
+	private int getHeuristicScore(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException {
+		return getStateMachine().findReward(role, state);
+	}
 
 	@Override
 	public StateMachine getInitialStateMachine() {
