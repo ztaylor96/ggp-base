@@ -50,7 +50,7 @@ public final class SirTobyKeepaliveHeuristic extends StateMachineGamer
 			bestMove(getRole(), getCurrentState(), timeout - buffer, depth);
 			if (bestScore == 100) { break; }
 			if (System.currentTimeMillis() >= end) { break; }
-			if (depth >= 3) { break; }
+			if (depth >= 10) { break; }
 		}
 		long stop = System.currentTimeMillis();
 
