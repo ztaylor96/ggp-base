@@ -1,8 +1,11 @@
 package org.ggp.base.player.gamer.statemachine.sirtoby;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.ggp.base.apps.player.detail.DetailPanel;
@@ -22,7 +25,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
-public final class MonteCarlo extends StateMachineGamer
+public final class MonteCarloTreeSearch extends StateMachineGamer
 {
 
 	private Map<MachineState, Integer> utils = new HashMap<MachineState, Integer>();
@@ -30,21 +33,18 @@ public final class MonteCarlo extends StateMachineGamer
 
 	@Override
 	public String getName() {
-		return "SirTobyMonteCarlo";
+		return "SirTobyMonteCarloTreeSearch";
 	}
 
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
-
 		long start = System.currentTimeMillis();
 		long buffer = (long) ((timeout - start) * 0.1); // use 90% of available time
 		long end = timeout - buffer;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		Move move = null;
-		if (moves.size() == 1) {
-			move = moves.get(0);
-		} else {
+		Move move = moves.get(0);
+		if (moves.size() > 1) {
 			move = bestMove(getRole(), getCurrentState(), end);
 		}
 		notifyObservers(new GamerSelectedMoveEvent(moves, move, System.currentTimeMillis() - start));
@@ -54,38 +54,110 @@ public final class MonteCarlo extends StateMachineGamer
 	private Move bestMove(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		// explore successor states until time is up to estimate which has best expected utility by
-		int sirTobyPlayerIndex = getStateMachine().getRoleIndices().get(role); // SirToby's index into moveSeq array below
-		Map<MachineState, Move> moves = new HashMap<MachineState, Move>();	// map from successor State -> Move from current state
 		while (true) {
-			for (List<Move> moveSeq : getStateMachine().getLegalJointMoves(state)) {
-				if (System.currentTimeMillis() >= end) { break; }
-				MachineState next = getStateMachine().getNextState(state, moveSeq);
-				explore(role, next);
-				if (!moves.containsKey(next)) {
-					moves.put(next, moveSeq.get(sirTobyPlayerIndex));	// remember which move leads us to next state
-				}
+			// first heuristically select path to explore
+			List<MachineState> path = new ArrayList<MachineState>();
+			select(role, state, path);
+
+			// explore starting from the last state of this path
+			MachineState frontierState = path.get(path.size()-1);
+			int value = explore(role, frontierState);
+
+			// backprop this explored value upwards to other states in path
+			for (MachineState s: path) {
+				// skip updating frontier state because it already happened inside
+				// explore function
+				if (s.equals(frontierState)) { continue; }
+
+				int stateCurrentUtil = 0;
+				if (utils.containsKey(s)) { stateCurrentUtil = utils.get(s); }
+				utils.put(s, stateCurrentUtil + value);
+
+				int nVisits = 0;
+				if (numVisits.containsKey(s)) { nVisits = numVisits.get(s); }
+				numVisits.put(s, nVisits + 1);
 			}
 
 			if (System.currentTimeMillis() >= end) { break; }
 		}
 
 		// evaluate options, return move that leads to state with highest utility
-		Move bestMove = null;
+		MachineState bestChild = null;
 		int bestUtil = 0;
-		for (MachineState key: moves.keySet()) {
-			int nVisits = 1;	// for terminal states
-			if (numVisits.containsKey(key)) {
-				nVisits = numVisits.get(key);
-			}
+		Map<MachineState, Move> stateToMoveMap = new HashMap<MachineState, Move>();
+		for (MachineState next: getSuccessorStates(role, state, stateToMoveMap)) {
 
-			int averageUtil = utils.get(key) / nVisits;
-			if (bestMove == null || averageUtil > bestUtil) {
-				bestMove = moves.get(key);
+			int nVisits = 1;	// for terminal states
+			if (numVisits.containsKey(next)) { nVisits = numVisits.get(next); }
+
+			int util = 0;
+			if (utils.containsKey(next)) {
+				util = utils.get(next);
+			} else {
+				if (getStateMachine().findTerminalp(next)) {
+					util = getStateMachine().findReward(role, next);
+				}
+			}
+			int averageUtil = util / nVisits;
+			if (bestChild == null || averageUtil > bestUtil) {
+				bestChild = next;
 				bestUtil = averageUtil;
 			}
 		}
 
-		return bestMove;
+		return stateToMoveMap.get(bestChild);
+	}
+
+	private Set<MachineState> getSuccessorStates(Role r, MachineState s, Map<MachineState, Move> moves) throws MoveDefinitionException, TransitionDefinitionException {
+		int playerIndex = getStateMachine().getRoleIndices().get(r);
+		Set<MachineState> successors = new HashSet<MachineState>();
+		for (List<Move> moveSeq: getStateMachine().getLegalJointMoves(s)) {
+			MachineState successor = getStateMachine().findNext(moveSeq, s);
+			successors.add(successor);
+			if (moves != null) {
+				moves.put(successor, moveSeq.get(playerIndex));
+			}
+		}
+		return successors;
+	}
+
+	private void select(Role r, MachineState s, List<MachineState> path) throws MoveDefinitionException, TransitionDefinitionException {
+
+		// if current node hasn't been visited, return it
+		if (!numVisits.containsKey(s)) {
+			path.add(s);
+			return;
+		}
+
+		// if any children haven't been visited, return that
+		Set<MachineState> children = getSuccessorStates(r, s, null);
+		double bestScore = 0.0;
+		MachineState bestChild = null;
+		for (MachineState child: children) {
+			if (!numVisits.containsKey(child)) {
+				path.add(child);
+				return;
+			}
+
+			// compute scoring function for each child as we iterate through
+			// because if all have been visited, we use the scoring function to choose
+			// next child on path
+			double score = computeScore(child, numVisits.get(s));
+			if (bestChild == null || bestScore < score) {
+				bestChild = child;
+				bestScore = score;
+			}
+		}
+
+		// add next child and continue building path
+		path.add(bestChild);
+		select(r, bestChild, path);
+	}
+
+	private double computeScore(MachineState s, int nParentVisits) {
+		 int util = utils.get(s);
+		 double nVisits = (double) numVisits.get(s);
+		 return util / nVisits + Math.sqrt(Math.log(nParentVisits) / nVisits);
 	}
 
 	private int explore(Role r, MachineState s) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
@@ -99,9 +171,7 @@ public final class MonteCarlo extends StateMachineGamer
 		// shouldn't be dampened by numVisits. For the code in bestMove to work,
 		// we'll just use 1 as numVisits for terminal states when calculating best move
 		int currentStateNumVisits = 0;
-		if (numVisits.containsKey(s)) {
-			currentStateNumVisits = numVisits.get(s);
-		}
+		if (numVisits.containsKey(s)) { currentStateNumVisits = numVisits.get(s); }
 		numVisits.put(s, currentStateNumVisits + 1);
 
 		// pick a random move and recursively move down game tree
@@ -112,9 +182,7 @@ public final class MonteCarlo extends StateMachineGamer
 
 		// update the total utility for this state based on exploration value
 		int stateCurrentUtil = 0;
-		if (utils.containsKey(s)) {
-			stateCurrentUtil = utils.get(s);
-		}
+		if (utils.containsKey(s)) { stateCurrentUtil = utils.get(s); }
 		utils.put(s, stateCurrentUtil + value);
 
 		return value;	// propagate value upwards to previous states
