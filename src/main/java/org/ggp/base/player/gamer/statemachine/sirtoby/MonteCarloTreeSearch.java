@@ -40,7 +40,7 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		long start = System.currentTimeMillis();
-		long buffer = (long) ((timeout - start) * 0.1); // use 90% of available time
+		long buffer = (long) ((timeout - start) * 0.05); // use 95% of available time
 		long end = timeout - buffer;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move move = moves.get(0);
@@ -87,17 +87,16 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 		Map<MachineState, Move> stateToMoveMap = new HashMap<MachineState, Move>();
 		for (MachineState next: getSuccessorStates(role, state, stateToMoveMap)) {
 
-			int nVisits = 1;	// for terminal states
-			if (numVisits.containsKey(next)) { nVisits = numVisits.get(next); }
-
 			int util = 0;
-			if (utils.containsKey(next)) {
+			int nVisits = 1;
+			if (getStateMachine().findTerminalp(next)) {
+				util = getStateMachine().findReward(role, next);
+				nVisits = 1;
+			} else if (utils.containsKey(next)) {
 				util = utils.get(next);
-			} else {
-				if (getStateMachine().findTerminalp(next)) {
-					util = getStateMachine().findReward(role, next);
-				}
+				nVisits = numVisits.get(next);
 			}
+
 			int averageUtil = util / nVisits;
 			if (bestChild == null || averageUtil > bestUtil) {
 				bestChild = next;
@@ -124,7 +123,7 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 	private void select(Role r, MachineState s, List<MachineState> path) throws MoveDefinitionException, TransitionDefinitionException {
 
 		// if current node hasn't been visited, return it
-		if (!numVisits.containsKey(s)) {
+		if (!numVisits.containsKey(s) || getStateMachine().findTerminalp(s)) {
 			path.add(s);
 			return;
 		}
@@ -157,22 +156,19 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 	private double computeScore(MachineState s, int nParentVisits) {
 		 int util = utils.get(s);
 		 double nVisits = (double) numVisits.get(s);
-		 return util / nVisits + Math.sqrt(Math.log(nParentVisits) / nVisits);
+		 return util / nVisits + Math.sqrt(2*Math.log(nParentVisits) / nVisits);
 	}
 
 	private int explore(Role r, MachineState s) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+		int currentStateNumVisits = 0;
+		if (numVisits.containsKey(s)) { currentStateNumVisits = numVisits.get(s); }
+		numVisits.put(s, currentStateNumVisits + 1);
+
 		if (getStateMachine().findTerminalp(s)) { // base condition: check if terminal state
 			int reward = getStateMachine().findReward(r,s);
 			utils.put(s, reward);
 			return reward;
 		}
-
-		// careful not to update this for terminal nodes because reward value
-		// shouldn't be dampened by numVisits. For the code in bestMove to work,
-		// we'll just use 1 as numVisits for terminal states when calculating best move
-		int currentStateNumVisits = 0;
-		if (numVisits.containsKey(s)) { currentStateNumVisits = numVisits.get(s); }
-		numVisits.put(s, currentStateNumVisits + 1);
 
 		// pick a random move and recursively move down game tree
 		List<List<Move>> allJointMoves = getStateMachine().getLegalJointMoves(s);
