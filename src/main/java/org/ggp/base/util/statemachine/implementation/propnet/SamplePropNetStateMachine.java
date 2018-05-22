@@ -56,8 +56,8 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public boolean isTerminal(MachineState state) {
-        // TODO: Compute whether the MachineState is terminal.
-        return false;
+        markBases(state);
+        return propmarkp(propNet.getTerminalProposition());
     }
 
     /**
@@ -152,6 +152,43 @@ public class SamplePropNetStateMachine extends StateMachine {
     }
 
     /* Helper methods */
+
+    private boolean markBases(MachineState state)
+    {
+    	Map<GdlSentence, Proposition> baseProps = propNet.getBasePropositions();
+    	Set<GdlSentence> stateContents = state.getContents();
+    	for (GdlSentence key : baseProps.keySet()) {
+    		if (stateContents.contains(key)) {
+    			baseProps.get(key).setValue(true);
+    		} else {
+    			baseProps.get(key).setValue(false);
+    		}
+    	}
+    	return true;
+    }
+
+    private boolean markActions(Move move)
+    {
+    	Map<GdlSentence, Proposition> inputProps = propNet.getInputPropositions();
+    	GdlSentence action = move.getContents().toSentence();
+    	for (GdlSentence key : inputProps.keySet()) {
+    		if (key.equals(action)) {
+    			inputProps.get(key).setValue(true);
+    		} else {
+    			inputProps.get(key).setValue(false);
+    		}
+    	}
+    	return true;
+    }
+
+    private boolean propmarkp (Proposition p)
+    {
+    	if (propNet.getInputPropositions().values().contains(p)) {return p.getValue();}
+    	if (propNet.getBasePropositions().values().contains(p)) {return p.getValue();}
+
+    	return propmarkp((Proposition) p.getSingleInput());
+
+     }
 
     /**
      * The Input propositions are indexed by (does ?player ?action).
