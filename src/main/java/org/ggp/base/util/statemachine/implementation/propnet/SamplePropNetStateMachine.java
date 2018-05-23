@@ -34,6 +34,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     /** The player roles */
     private List<Role> roles;
 
+    private MachineState initialState;
+
     /**
      * Initializes the PropNetStateMachine. You should compute the topological
      * ordering here. Additionally you may compute the initial state here, at
@@ -41,10 +43,12 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public void initialize(List<Gdl> description) {
+    	print("PropNetStateMachine init");
         try {
             propNet = OptimizingPropNetFactory.create(description);
             roles = propNet.getRoles();
             ordering = getOrdering();
+            print("Done init");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -57,8 +61,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public boolean isTerminal(MachineState state) {
         markBases(state);
-//        setPropValues();
-//      return propmarkp(propNet.getTerminalProposition());
+//        return propmarkp(propNet.getTerminalProposition());
      // ** CS
         propagate();
         return propNet.getTerminalProposition().getValue();
@@ -101,8 +104,14 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-        // TODO: Compute the initial state.
-        return null;
+		propNet.getInitProposition().setValue(true);
+		Set<GdlSentence> stateInfo = new HashSet<GdlSentence>();
+		for (Proposition p: propNet.getBasePropositions().values()) {
+			if (p.getSingleInput().getValue()) {
+				stateInfo.add(p.getName());
+			}
+		}
+		return new MachineState(stateInfo);
     }
 
     /**
@@ -121,8 +130,15 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> getLegalMoves(MachineState state, Role role)
             throws MoveDefinitionException {
-        // TODO: Compute legal moves.
-        return null;
+		List<Move> moves = new ArrayList<Move>();
+		markBases(state);
+		propagate();
+		for (Proposition p: propNet.getLegalPropositions().get(role)) {
+			if (p.getValue()) {
+				moves.add(getMoveFromProposition(p));
+			}
+		}
+        return moves;
     }
 
     /**
@@ -168,6 +184,8 @@ public class SamplePropNetStateMachine extends StateMachine {
         // ** CS
         // first remove input and base propositions from this set of components
         // that we will be ordering topologically
+
+        components.remove(propNet.getInitProposition());
         for (Proposition proposition : propNet.getInputPropositions().values()) {
 			components.remove(proposition);
 		}
@@ -176,29 +194,32 @@ public class SamplePropNetStateMachine extends StateMachine {
 			components.remove(proposition);
 		}
 
-		components.remove(propNet.getInitProposition());
-
+		// order the rest of the components
 		while (!components.isEmpty()) {
-			Component toAdd = null;
+			// make list of components to be added next
+			// based on whether their inputs have been added
+			List<Component> toAdd = new ArrayList<Component>();
 			for (Component component : components) {
-				toAdd = component;
+				boolean shouldAdd = true;
 				// check to make sure all inputs are already added
 				for (Component input : component.getInputs()) {
-					if (!order.contains(input)) {
-						toAdd = null;
+					if (components.contains(input) && !toAdd.contains(input)) {
+						shouldAdd = false;
 						break; // found input that hasn't been added -- shouldn't add this component yet
 					}
 				}
 
-				if (toAdd != null) break;
+				if (shouldAdd) {
+					toAdd.add(component);
+				}
 			}
 
 			// remove from components
-			components.remove(toAdd);
-
-			// then add if it's a proposition
-			if (toAdd instanceof Proposition) {
-				order.add((Proposition) toAdd);
+			for (Component c: toAdd) {
+				components.remove(c);
+				if (c instanceof Proposition) {
+					order.add((Proposition) c);
+				}
 			}
 		}
 
@@ -212,6 +233,10 @@ public class SamplePropNetStateMachine extends StateMachine {
     }
 
     /* Helper methods */
+
+    private void print(String s) {
+    	System.out.println(s);
+    }
 
     private boolean markBases(MachineState state)
     {

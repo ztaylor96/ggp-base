@@ -14,9 +14,6 @@ import org.ggp.base.player.gamer.event.GamerSelectedMoveEvent;
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
 import org.ggp.base.util.game.Game;
-import org.ggp.base.util.gdl.grammar.Gdl;
-import org.ggp.base.util.propnet.architecture.PropNet;
-import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -25,7 +22,7 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
+import org.ggp.base.util.statemachine.implementation.propnet.SamplePropNetStateMachine;
 
 
 public final class PropNets extends StateMachineGamer
@@ -43,9 +40,9 @@ public final class PropNets extends StateMachineGamer
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		long start = System.currentTimeMillis();
-//		long buffer = (long) ((timeout - start) * 0.1); // use 95% of available time
 		long end = timeout - 1500;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
+		print("num legal from current state: " + moves.size());
 		Move move = moves.get(0);
 		if (moves.size() > 1) {
 			move = bestMove(getRole(), getCurrentState(), end);
@@ -57,6 +54,7 @@ public final class PropNets extends StateMachineGamer
 	private Move bestMove(Role role, MachineState state, long end) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		// explore successor states until time is up to estimate which has best expected utility by
+		int nDepthCharges = 0;
 		while (true) {
 			// first heuristically select path to explore
 			List<MachineState> path = new ArrayList<MachineState>();
@@ -65,6 +63,7 @@ public final class PropNets extends StateMachineGamer
 			// explore starting from the last state of this path
 			MachineState frontierState = path.get(path.size()-1);
 			int value = explore(role, frontierState);
+			nDepthCharges++;
 
 			// backprop this explored value upwards to other states in path
 			for (MachineState s: path) {
@@ -83,6 +82,7 @@ public final class PropNets extends StateMachineGamer
 
 			if (System.currentTimeMillis() >= end) { break; }
 		}
+		print("num depth charges: " + nDepthCharges);
 
 		// evaluate options, return move that leads to state with highest utility
 		MachineState bestChild = null;
@@ -106,6 +106,7 @@ public final class PropNets extends StateMachineGamer
 				bestUtil = averageUtil;
 			}
 		}
+		print("best util: "+bestUtil);
 
 		return stateToMoveMap.get(bestChild);
 	}
@@ -170,6 +171,7 @@ public final class PropNets extends StateMachineGamer
 		if (getStateMachine().findTerminalp(s)) { // base condition: check if terminal state
 			int reward = getStateMachine().findReward(r,s);
 			utils.put(s, reward);
+//			print("found terminal reward value: " + reward);
 			return reward;
 		}
 
@@ -189,7 +191,8 @@ public final class PropNets extends StateMachineGamer
 
 	@Override
 	public StateMachine getInitialStateMachine() {
-		return new CachedStateMachine(new ProverStateMachine());
+//		return new CachedStateMachine(new ProverStateMachine());
+		return new CachedStateMachine(new SamplePropNetStateMachine());
 	}
 
 	@Override
@@ -200,14 +203,11 @@ public final class PropNets extends StateMachineGamer
 	@Override
 	public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
-		ArrayList<Gdl> description = (ArrayList<Gdl>) getMatch().getGame().getRules();
-		try {
-			PropNet propnet = OptimizingPropNetFactory.create(description);
-			propnet.renderToFile("propnet.txt");
-			System.out.println(propnet.getSize());
-		} catch (InterruptedException e) {
-			//do nothing
-		}
+		print("metagaming");
+	}
+
+	private void print(String s) {
+		System.out.println(s);
 	}
 
 	@Override
