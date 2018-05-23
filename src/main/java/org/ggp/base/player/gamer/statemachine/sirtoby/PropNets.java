@@ -171,7 +171,7 @@ public final class PropNets extends StateMachineGamer
 		if (getStateMachine().findTerminalp(s)) { // base condition: check if terminal state
 			int reward = getStateMachine().findReward(r,s);
 			utils.put(s, reward);
-//			print("found terminal reward value: " + reward);
+			print("found terminal reward value: " + reward);
 			return reward;
 		}
 

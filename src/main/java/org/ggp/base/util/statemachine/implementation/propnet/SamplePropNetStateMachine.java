@@ -105,13 +105,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getInitialState() {
 		propNet.getInitProposition().setValue(true);
-		Set<GdlSentence> stateInfo = new HashSet<GdlSentence>();
-		for (Proposition p: propNet.getBasePropositions().values()) {
-			if (p.getSingleInput().getValue()) {
-				stateInfo.add(p.getName());
-			}
-		}
-		return new MachineState(stateInfo);
+		return getStateFromBase();
     }
 
     /**

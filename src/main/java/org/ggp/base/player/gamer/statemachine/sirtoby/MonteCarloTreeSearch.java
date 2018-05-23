@@ -43,7 +43,7 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move move = moves.get(0);
 		if (moves.size() > 1) {
-			move = bestMove(getRole(), getCurrentState(), timeout - 2500);	// 2.5 second buffer
+			move = bestMove(getRole(), getCurrentState(), timeout - 1500);	// 1.5 second buffer
 		}
 		notifyObservers(new GamerSelectedMoveEvent(moves, move, System.currentTimeMillis() - start));
 		return move;
