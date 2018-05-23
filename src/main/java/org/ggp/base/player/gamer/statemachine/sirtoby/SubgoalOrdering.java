@@ -51,12 +51,10 @@ public final class SubgoalOrdering extends StateMachineGamer
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		long start = System.currentTimeMillis();
-		long buffer = (long) ((timeout - start) * 0.05); // use 95% of available time
-		long end = timeout - buffer;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move move = moves.get(0);
 		if (moves.size() > 1) {
-			move = bestMove(getRole(), getCurrentState(), end);
+			move = bestMove(getRole(), getCurrentState(), timeout - 3000);
 		}
 		notifyObservers(new GamerSelectedMoveEvent(moves, move, System.currentTimeMillis() - start));
 		return move;
@@ -72,6 +70,7 @@ public final class SubgoalOrdering extends StateMachineGamer
 
 			// explore starting from the last state of this path
 			MachineState frontierState = path.get(path.size()-1);
+			print("exploring");
 			int value = explore(role, frontierState);
 
 			// backprop this explored value upwards to other states in path
@@ -174,10 +173,11 @@ public final class SubgoalOrdering extends StateMachineGamer
 		int currentStateNumVisits = 0;
 		if (numVisits.containsKey(s)) { currentStateNumVisits = numVisits.get(s); }
 		numVisits.put(s, currentStateNumVisits + 1);
-
+		print("recursing");
 		if (getStateMachine().findTerminalp(s)) { // base condition: check if terminal state
 			int reward = getStateMachine().findReward(r,s);
 			utils.put(s, reward);
+			print("found terminal");
 			return reward;
 		}
 
@@ -193,6 +193,10 @@ public final class SubgoalOrdering extends StateMachineGamer
 		utils.put(s, stateCurrentUtil + value);
 
 		return value;	// propagate value upwards to previous states
+	}
+
+	private void print(String s) {
+		System.out.println(s);
 	}
 
 	@Override

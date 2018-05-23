@@ -40,12 +40,10 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		long start = System.currentTimeMillis();
-		long buffer = (long) ((timeout - start) * 0.05); // use 95% of available time
-		long end = timeout - buffer;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move move = moves.get(0);
 		if (moves.size() > 1) {
-			move = bestMove(getRole(), getCurrentState(), end);
+			move = bestMove(getRole(), getCurrentState(), timeout - 2500);	// 2.5 second buffer
 		}
 		notifyObservers(new GamerSelectedMoveEvent(moves, move, System.currentTimeMillis() - start));
 		return move;
@@ -197,7 +195,7 @@ public final class MonteCarloTreeSearch extends StateMachineGamer
 	@Override
 	public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
-		// Random gamer does no metagaming at the beginning of the match.
+
 	}
 
 	@Override

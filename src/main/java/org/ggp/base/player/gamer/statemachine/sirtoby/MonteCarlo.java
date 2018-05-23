@@ -38,14 +38,10 @@ public final class MonteCarlo extends StateMachineGamer
 	{
 
 		long start = System.currentTimeMillis();
-		long buffer = (long) ((timeout - start) * 0.1); // use 90% of available time
-		long end = timeout - buffer;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		Move move = null;
-		if (moves.size() == 1) {
-			move = moves.get(0);
-		} else {
-			move = bestMove(getRole(), getCurrentState(), end);
+		Move move = moves.get(0);
+		if (moves.size() > 1) {
+			move = bestMove(getRole(), getCurrentState(), timeout - 1000); // 1 second buffer
 		}
 		notifyObservers(new GamerSelectedMoveEvent(moves, move, System.currentTimeMillis() - start));
 		return move;

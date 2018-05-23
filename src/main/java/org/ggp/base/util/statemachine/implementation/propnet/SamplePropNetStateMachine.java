@@ -57,7 +57,11 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public boolean isTerminal(MachineState state) {
         markBases(state);
-        return propmarkp(propNet.getTerminalProposition());
+//        setPropValues();
+//      return propmarkp(propNet.getTerminalProposition());
+     // ** CS
+        propagate();
+        return propNet.getTerminalProposition().getValue();
     }
 
     /**
@@ -70,8 +74,24 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public int getGoal(MachineState state, Role role)
             throws GoalDefinitionException {
-        // TODO: Compute the goal for role in state.
-        return -1;
+    	// ** CS
+    	markBases(state);
+    	propagate();
+    	int value = -1;
+    	boolean foundOne = false;
+		for (Proposition p: propNet.getGoalPropositions().get(role)) {
+			if (p.getValue()) {
+				// check if already found a goal. if so, throw exception
+				if (foundOne) {
+					throw new GoalDefinitionException(state, role);
+				}
+
+				value = getGoalValue(p);
+				foundOne = true;
+			}
+		}
+
+        return value;
     }
 
     /**
@@ -91,8 +111,8 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public List<Move> findActions(Role role)
             throws MoveDefinitionException {
-        // TODO: Compute legal moves.
-        return null;
+		// we don't need to do this because we don't use it anywhere in our player
+		return null;
     }
 
     /**
@@ -111,8 +131,13 @@ public class SamplePropNetStateMachine extends StateMachine {
     @Override
     public MachineState getNextState(MachineState state, List<Move> moves)
             throws TransitionDefinitionException {
-        // TODO: Compute the next state.
-        return null;
+    	// ** CS
+    	markBases(state);
+    	for (Move move : moves) {
+    		markInputs(move);
+    	}
+    	propagate();
+    	return getStateFromBase();
     }
 
     /**
@@ -140,7 +165,42 @@ public class SamplePropNetStateMachine extends StateMachine {
         // All of the propositions in the PropNet.
         List<Proposition> propositions = new ArrayList<Proposition>(propNet.getPropositions());
 
-        // TODO: Compute the topological ordering.
+        // ** CS
+        // first remove input and base propositions from this set of components
+        // that we will be ordering topologically
+        for (Proposition proposition : propNet.getInputPropositions().values()) {
+			components.remove(proposition);
+		}
+
+		for (Proposition proposition : propNet.getBasePropositions().values()) {
+			components.remove(proposition);
+		}
+
+		components.remove(propNet.getInitProposition());
+
+		while (!components.isEmpty()) {
+			Component toAdd = null;
+			for (Component component : components) {
+				toAdd = component;
+				// check to make sure all inputs are already added
+				for (Component input : component.getInputs()) {
+					if (!order.contains(input)) {
+						toAdd = null;
+						break; // found input that hasn't been added -- shouldn't add this component yet
+					}
+				}
+
+				if (toAdd != null) break;
+			}
+
+			// remove from components
+			components.remove(toAdd);
+
+			// then add if it's a proposition
+			if (toAdd instanceof Proposition) {
+				order.add((Proposition) toAdd);
+			}
+		}
 
         return order;
     }
@@ -167,7 +227,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     	return true;
     }
 
-    private boolean markActions(Move move)
+    private void markInputs(Move move)
     {
     	Map<GdlSentence, Proposition> inputProps = propNet.getInputPropositions();
     	GdlSentence action = move.getContents().toSentence();
@@ -178,17 +238,29 @@ public class SamplePropNetStateMachine extends StateMachine {
     			inputProps.get(key).setValue(false);
     		}
     	}
-    	return true;
     }
 
-    private boolean propmarkp (Proposition p)
-    {
-    	if (propNet.getInputPropositions().values().contains(p)) {return p.getValue();}
-    	if (propNet.getBasePropositions().values().contains(p)) {return p.getValue();}
+    // per the notes, these 2 methods below do the same thing
+    // propagate is slightly quicker
 
-    	return propmarkp((Proposition) p.getSingleInput());
+//    private boolean propmarkp (Proposition p)
+//    {
+//    	// per piazza @165, this is done. can treat any non-input and non-base
+//    	// as a view prop
+//    	if (propNet.getInputPropositions().values().contains(p)) {return p.getValue();}
+//    	if (propNet.getBasePropositions().values().contains(p)) {return p.getValue();}
+//
+//    	return propmarkp((Proposition) p.getSingleInput());	// handle view prop
+//     }
 
-     }
+    private void propagate() {
+    	// ** CS
+    	for (Proposition prop: ordering) {
+			prop.setValue(prop.getSingleInput().getValue());
+		}
+    }
+
+
 
     /**
      * The Input propositions are indexed by (does ?player ?action).

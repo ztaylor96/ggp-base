@@ -12,7 +12,6 @@ import java.util.Set;
 
 public abstract class Component implements Serializable
 {
-
 	private static final long serialVersionUID = 352524175700224447L;
     /** The inputs to the component. */
     private final Set<Component> inputs;

@@ -43,8 +43,8 @@ public final class PropNets extends StateMachineGamer
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
 		long start = System.currentTimeMillis();
-		long buffer = (long) ((timeout - start) * 0.05); // use 95% of available time
-		long end = timeout - buffer;
+//		long buffer = (long) ((timeout - start) * 0.1); // use 95% of available time
+		long end = timeout - 1500;
 		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
 		Move move = moves.get(0);
 		if (moves.size() > 1) {
