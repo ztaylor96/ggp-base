@@ -104,8 +104,13 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     @Override
     public MachineState getInitialState() {
-		propNet.getInitProposition().setValue(true);
-		return getStateFromBase();
+    	for (Proposition p: propNet.getBasePropositions().values()) {p.setValue(false);}
+    	for (Proposition p: propNet.getInputPropositions().values()) {p.setValue(false);}
+    	propNet.getInitProposition().setValue(true);
+    	MachineState ret = getStateFromBase();
+    	// unmark init proposition
+    	propNet.getInitProposition().setValue(false);
+    	return ret;
     }
 
     /**
@@ -143,9 +148,7 @@ public class SamplePropNetStateMachine extends StateMachine {
             throws TransitionDefinitionException {
     	// ** CS
     	markBases(state);
-    	for (Move move : moves) {
-    		markInputs(move);
-    	}
+    	markInputs(moves);
     	propagate();
     	return getStateFromBase();
     }
@@ -246,12 +249,12 @@ public class SamplePropNetStateMachine extends StateMachine {
     	return true;
     }
 
-    private void markInputs(Move move)
+    private void markInputs(List<Move> moves)
     {
     	Map<GdlSentence, Proposition> inputProps = propNet.getInputPropositions();
-    	GdlSentence action = move.getContents().toSentence();
+    	List<GdlSentence> actions = toDoes(moves);
     	for (GdlSentence key : inputProps.keySet()) {
-    		if (key.equals(action)) {
+    		if (actions.contains(key)) {
     			inputProps.get(key).setValue(true);
     		} else {
     			inputProps.get(key).setValue(false);
@@ -332,7 +335,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      * from the true BasePropositions.  This is correct but slower than more advanced implementations
      * You need not use this method!
      * @return PropNetMachineState
-     */
+     *
     public MachineState getStateFromBase()
     {
         Set<GdlSentence> contents = new HashSet<GdlSentence>();
