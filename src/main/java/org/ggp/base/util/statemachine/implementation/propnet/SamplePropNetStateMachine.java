@@ -1,6 +1,7 @@
 package org.ggp.base.util.statemachine.implementation.propnet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     	print("PropNetStateMachine init");
         try {
             propNet = OptimizingPropNetFactory.create(description);
+            propNet = factor(propNet);
             roles = propNet.getRoles();
             ordering = getOrdering();
             print("Done init");
@@ -151,6 +153,82 @@ public class SamplePropNetStateMachine extends StateMachine {
     	markInputs(moves);
     	propagate();
     	return getStateFromBase();
+    }
+
+    /**
+     * Uses breadth first search to find the nodes that are unreachable from a certain node in the propnet
+     * @param propnet
+     * @param p
+     * @return
+     */
+    private Set<Proposition> unreachableFrom(PropNet propnet, Proposition p) {
+    	Set<Proposition> unvisited = propnet.getPropositions();
+
+    	Proposition current = p;
+
+    	LinkedList<Proposition> queue = new LinkedList<Proposition>();
+
+    	unvisited.remove(current);
+    	queue.add(current);
+
+    	while (queue.size() != 0) {
+    		current = queue.poll();
+    		for (Component v: current.getInputs()) {
+    			if (unvisited.contains(v) && v instanceof Proposition) {
+    				unvisited.remove(v);
+    				queue.add((Proposition) v);
+    			}
+    		}
+    	}
+
+    	return unvisited;
+    }
+
+    /**
+     * Gets all the propositions from which to backward search for connected components when pruning the
+     * propnet
+     * @param propnet
+     * @return
+     */
+    private Set<Proposition> importantProps(PropNet propnet) {
+    	Set<Proposition> importantProps = new HashSet<Proposition>();
+    	importantProps.add(propnet.getTerminalProposition());
+    	for (Collection<Proposition> c: propnet.getGoalPropositions().values()) {
+        	importantProps.addAll(c);
+    	}
+    	for (Collection<Proposition> c: propnet.getLegalPropositions().values()) {
+        	importantProps.addAll(c);
+    	}
+    	return importantProps;
+    }
+
+    /**
+     * Returns a factored propnet
+     * @param propnet
+     * @return
+     */
+    public PropNet factor(PropNet propnet) {
+    	PropNet result = propnet;
+    	Set<Proposition> importantProps = importantProps(propnet);
+
+    	HashSet<HashSet<Proposition>> unreachableSets = new HashSet<HashSet<Proposition>>();
+    	for (Proposition p: propnet.getPropositions()) {
+    		if (importantProps.contains(p)) {
+    			unreachableSets.add((HashSet<Proposition>) unreachableFrom(propnet, p));
+    		}
+    	}
+
+    	Set<Proposition> propsToCut = propnet.getPropositions();
+    	for (HashSet<Proposition> s: unreachableSets) {
+    		propsToCut.retainAll(s);
+    	}
+
+    	Set<Component> propsToKeep = propnet.getComponents();
+    	propsToKeep.removeAll(propsToCut);
+
+    	PropNet factoredPropnet = new PropNet(propnet.getRoles(), propsToKeep);
+
+    	return factoredPropnet;
     }
 
     /**
