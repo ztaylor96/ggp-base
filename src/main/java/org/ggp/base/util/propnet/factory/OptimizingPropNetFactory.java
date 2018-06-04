@@ -112,12 +112,11 @@ public class OptimizingPropNetFactory {
 	 * PropNet creation.
 	 */
 	public static PropNet create(List<Gdl> description) throws InterruptedException {
-		sanitizeDistinct(description);
 		return create(description, false);
 	}
 
 	public static PropNet create(List<Gdl> description, boolean verbose) throws InterruptedException {
-		//System.out.println("Building propnet...");
+		description = sanitizeDistinct(description);
 
 		long startTime = System.currentTimeMillis();
 
