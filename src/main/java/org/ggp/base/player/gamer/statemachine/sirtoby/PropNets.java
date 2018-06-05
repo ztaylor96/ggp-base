@@ -18,7 +18,6 @@ import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
 import org.ggp.base.util.statemachine.StateMachine;
-import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -192,7 +191,7 @@ public final class PropNets extends StateMachineGamer
 	@Override
 	public StateMachine getInitialStateMachine() {
 //		return new CachedStateMachine(new ProverStateMachine());
-		return new CachedStateMachine(new SamplePropNetStateMachine());
+		return new SamplePropNetStateMachine();
 	}
 
 	@Override
