@@ -262,19 +262,6 @@ public class SamplePropNetStateMachine extends StateMachine {
     	}
     }
 
-    // per the notes, these 2 methods below do the same thing
-    // propagate is slightly quicker
-
-//    private boolean propmarkp (Proposition p)
-//    {
-//    	// per piazza @165, this is done. can treat any non-input and non-base
-//    	// as a view prop
-//    	if (propNet.getInputPropositions().values().contains(p)) {return p.getValue();}
-//    	if (propNet.getBasePropositions().values().contains(p)) {return p.getValue();}
-//
-//    	return propmarkp((Proposition) p.getSingleInput());	// handle view prop
-//     }
-
     private void propagate() {
     	// ** CS
     	for (Proposition prop: ordering) {
@@ -335,7 +322,7 @@ public class SamplePropNetStateMachine extends StateMachine {
      * from the true BasePropositions.  This is correct but slower than more advanced implementations
      * You need not use this method!
      * @return PropNetMachineState
-     *
+     */
     public MachineState getStateFromBase()
     {
         Set<GdlSentence> contents = new HashSet<GdlSentence>();
