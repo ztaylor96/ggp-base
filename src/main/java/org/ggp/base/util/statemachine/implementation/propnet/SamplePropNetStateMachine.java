@@ -14,6 +14,7 @@ import org.ggp.base.util.gdl.grammar.GdlRelation;
 import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.propnet.architecture.Component;
 import org.ggp.base.util.propnet.architecture.PropNet;
+import org.ggp.base.util.propnet.architecture.components.Or;
 import org.ggp.base.util.propnet.architecture.components.Proposition;
 import org.ggp.base.util.propnet.factory.OptimizingPropNetFactory;
 import org.ggp.base.util.statemachine.MachineState;
@@ -47,6 +48,7 @@ public class SamplePropNetStateMachine extends StateMachine {
     	print("PropNetStateMachine init");
         try {
             propNet = OptimizingPropNetFactory.create(description);
+            propNet.renderToFile("propnet.txt");
             propNet = factor(propNet);
             roles = propNet.getRoles();
             ordering = getOrdering();
@@ -219,6 +221,51 @@ public class SamplePropNetStateMachine extends StateMachine {
      */
     public PropNet factor(PropNet propnet) {
     	print("**** Initial # of props: " + propnet.getPropositions().size());
+
+    	// check if propnet can be separated into multiple independent factors (basically smaller propnets)
+    	Component terminalInput = getTerminalInputIfSeparable(propnet);
+    	if (terminalInput != null) {
+    		print("not null");
+    		// build sets that contain all elements reachable from each
+    		// input to the singular terminal input (the OR gate)
+    		Set<Component> inputs = new HashSet<Component>(terminalInput.getInputs());
+    		Set<HashSet<Component>> factors = new HashSet<HashSet<Component>>();
+    		buildFactors(inputs, factors);
+    		print("num factors: " + factors.size());
+
+    		// find first independent factor and use that to play game, if any
+			Set<Component> toRemove = new HashSet<Component>();
+    		for (HashSet<Component> factor: factors) {
+    			boolean independentSubgame = true;
+    			for (HashSet<Component> otherFactor: factors) {
+    				if (factor == otherFactor) continue;
+    				if (haveCommonComponents(factor, otherFactor)) {
+    					independentSubgame = false;
+    					break;
+    				}
+    			}
+
+    			if (independentSubgame) {
+    				// found one that will work -- prune the other edges then use this one as
+    				// the propnet
+    				for (HashSet<Component> otherFactor: factors) {
+    					if (factor == otherFactor) continue;
+    					for (Component c: otherFactor) {
+        	    			if (c == propnet.getInitProposition()) print("init found");
+    					}
+    					toRemove.addAll(otherFactor);
+    				}
+    				break;
+    			}
+    		}
+
+    		for (Component remove: toRemove) {
+    			if (remove == propnet.getInitProposition()) continue;
+    			propnet.removeComponent(remove);
+    		}
+    		print("Removed " + (toRemove.size()-1) + " components");
+    	}
+
     	Set<Proposition> importantProps = importantProps(propnet);
     	Set<Component> reachable = new HashSet<Component>();
     	for (Proposition p: importantProps) {
@@ -247,6 +294,56 @@ public class SamplePropNetStateMachine extends StateMachine {
     	print("**** Factored # of props: " + factoredPropnet.getPropositions().size());
     	return factoredPropnet;
     }
+
+    private boolean haveCommonComponents(Set<Component> factor1, Set<Component> factor2) {
+    	// make copies then compare set difference
+    	Set<Component> c1 = new HashSet<Component>(factor1);
+    	Set<Component> c2 = new HashSet<Component>(factor2);
+    	c1.removeAll(factor2);
+    	c2.removeAll(factor1);
+    	return c1.size() != factor1.size() || c2.size() != factor2.size();
+    }
+
+    private void buildFactors(Set<Component> inputs, Set<HashSet<Component>> factors) {
+    	// use bfs to build preliminary factors
+    	Set<HashSet<Component>> prelimFactors = new HashSet<HashSet<Component>>();
+    	for (Component input: inputs) {
+    		HashSet<Component> factor = new HashSet<Component>();
+        	LinkedList<Component> q = new LinkedList<Component>();
+        	q.add(input);
+    		bfs(q, factor);
+    		print("Factor size: "+ factor.size());
+    		factors.add(factor);
+    	}
+
+    	// merge factors with common elements
+//    	while (true) {
+//    		boolean changesMade = false;
+//    		factors = new HashSet<HashSet<Component>>(prelimFactors);
+    		for (HashSet<Component> factor: factors) {
+    			for (HashSet<Component> otherFactor: factors) {
+    				if (factor == otherFactor) continue;
+    				if (haveCommonComponents(factor, otherFactor)) {
+    					print("common components");
+    				}
+    			}
+    		}
+
+//    		if (!changesMade) return;
+//    	}
+    }
+
+    private Component getTerminalInputIfSeparable(PropNet propnet) {
+    	Set<Component> terminalInputs = propnet.getTerminalProposition().getInputs();
+    	if (terminalInputs.size() != 1) { return null; }
+    	for (Component input: terminalInputs) {
+    		if (input instanceof Or) {
+    			return input;
+    		}
+    	}
+    	return null;
+    }
+
 
     /**
      * This should compute the topological ordering of propositions.
